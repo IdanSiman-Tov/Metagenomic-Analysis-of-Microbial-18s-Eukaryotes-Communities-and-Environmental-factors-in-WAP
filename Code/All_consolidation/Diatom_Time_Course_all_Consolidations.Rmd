@@ -1,0 +1,330 @@
+---
+title: "Diatom_Time_Course_all_Consolidations"
+author: "Idan Siman-Tov"
+date: '2022-11-07'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+library(ggpubr)
+library(ggnewscale)
+
+```
+
+
+```{r}
+
+# no
+
+source("..//..//Functions//My_Functions.R")
+# source("..//..//Functions//minimum_consolidation_functions//data_for_pca_formating_updatedSept2022_no_percentage_minimum_consolidation.R")
+source("..//..//Functions//no_consolidation_functions//metagenome_taxa_removed_updatedSept2022_no_percentage_no_consolidation.R")
+
+# source("..//..//Functions//minimum_consolidation_functions//Taxa_DF_updatedSept2022_no_percentage_minimum_consolidation.R")
+
+```
+
+```{r}
+# data_for_pca<-data_for_pca()
+metagenome_taxa<-metagenome_taxa_removed()
+```
+
+```{r}
+metagenome_taxa_percentage <-Percentage_Function(metagenome_taxa)
+```
+
+```{r}
+# Format the table for ggplot
+metagenome_taxa_count_time_course<-setNames(melt(metagenome_taxa), c('Taxa', 'Date', 'Percent_of_Population'))
+metagenome_taxa_percentage_time_course<-setNames(melt(metagenome_taxa_percentage), c('Taxa', 'Date', 'Percent_of_Population'))
+```
+
+```{r}
+# Convert numbers to log base 10 so that its easier to graph
+# Converting Percent_of_Population to logs
+metagenome_taxa_count_time_course_log<- metagenome_taxa_count_time_course
+metagenome_taxa_count_time_course_log$Percent_of_Population<-log10(metagenome_taxa_count_time_course_log$Percent_of_Population)
+
+
+# Converting percentages to logs
+metagenome_taxa_percentage_time_course_log<- metagenome_taxa_percentage_time_course
+metagenome_taxa_percentage_time_course_log$Percent_of_Population<-log10(metagenome_taxa_percentage_time_course_log$Percent_of_Population)
+
+```
+
+```{r}
+# Filtering to only include the "large correlated taxa" from percentages
+No_consolidation_Diaomea_and_Dictyochophyceae_metagenome_taxa_percentage_time_course_log <- metagenome_taxa_percentage_time_course_log %>% filter(str_detect(Taxa, "Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina|Stramenopiles.Diatomea.otherDiatomea|Stramenopiles.Diatomea.ME-Euk-FW10|Stramenopiles.Dictyochophyceae.Dictyochales|Stramenopiles.Dictyochophyceae.otherDictyochophyceae|Stramenopiles.Dictyochophyceae.Florenciellales|Stramenopiles.Dictyochophyceae.Pedinellales"))
+```
+
+
+
+
+"Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina|Stramenopiles.Diatomea.otherDiatomea|Stramenopiles.Diatomea.ME-Euk-FW10"
+
+
+
+
+```{r}
+
+# minimum
+
+# source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//minimum_consolidation_functions//data_for_pca_formating_updatedSept2022_no_percentage_minimum_consolidation.R")
+source("..//..//Functions//minimum_consolidation_functions//metagenome_taxa_removed_updatedSept2022_no_percentage_minimum_consolidation.R")
+
+source("..//..//Functions//minimum_consolidation_functions//Taxa_DF_updatedSept2022_no_percentage_minimum_consolidation.R")
+
+```
+
+```{r}
+data_for_pca<-data_for_pca()
+metagenome_taxa<-metagenome_taxa_removed()
+```
+
+```{r}
+metagenome_taxa_percentage <-Percentage_Function(metagenome_taxa)
+```
+
+```{r}
+# Format the table for ggplot
+metagenome_taxa_count_time_course<-setNames(melt(metagenome_taxa), c('Taxa', 'Date', 'Percent_of_Population'))
+metagenome_taxa_percentage_time_course<-setNames(melt(metagenome_taxa_percentage), c('Taxa', 'Date', 'Percent_of_Population'))
+```
+
+```{r}
+# Convert numbers to log base 10 so that its easier to graph
+# Converting Percent_of_Population to logs
+metagenome_taxa_count_time_course_log<- metagenome_taxa_count_time_course
+metagenome_taxa_count_time_course_log$Percent_of_Population<-log10(metagenome_taxa_count_time_course_log$Percent_of_Population)
+
+
+# Converting percentages to logs
+metagenome_taxa_percentage_time_course_log<- metagenome_taxa_percentage_time_course
+metagenome_taxa_percentage_time_course_log$Percent_of_Population<-log10(metagenome_taxa_percentage_time_course_log$Percent_of_Population)
+
+```
+
+```{r}
+# Filtering to only include the "large correlated taxa" from percentages
+Minimum_consolidation_Diaomea_and_Dictyochophyceae_metagenome_taxa_percentage_time_course_log <- metagenome_taxa_percentage_time_course_log %>% filter(str_detect(Taxa, "Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina|Stramenopiles.Diatomea.otherDiatomea|Stramenopiles.Diatomea.ME-Euk-FW10|Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae|Stramenopiles.Dictyochophyceae.Pedinellales"))
+```
+
+
+
+"Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina|Stramenopiles.Diatomea.otherDiatomea|Stramenopiles.Diatomea.ME-Euk-FW10"
+
+
+
+
+
+
+
+
+```{r}
+# medium
+
+
+# source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//medium_consolidation_functions//data_for_pca_formating_updatedSept2022_no_percentage_medium_consolidation.R")
+source("..//..//Functions//medium_consolidation_functions//metagenome_taxa_removed_updatedSept2022_no_percentage_medium_consolidation.R")
+
+source("..//..//Functions//medium_consolidation_functions//Taxa_DF_updatedSept2022_no_percentage_medium_consolidation.R")
+
+
+
+```
+
+```{r}
+data_for_pca<-data_for_pca()
+metagenome_taxa<-metagenome_taxa_removed()
+```
+
+```{r}
+metagenome_taxa_percentage <-Percentage_Function(metagenome_taxa)
+```
+
+```{r}
+# Format the table for ggplot
+metagenome_taxa_count_time_course<-setNames(melt(metagenome_taxa), c('Taxa', 'Date', 'Percent_of_Population'))
+metagenome_taxa_percentage_time_course<-setNames(melt(metagenome_taxa_percentage), c('Taxa', 'Date', 'Percent_of_Population'))
+```
+
+```{r}
+# Convert numbers to log base 10 so that its easier to graph
+# Converting Percent_of_Population to logs
+metagenome_taxa_count_time_course_log<- metagenome_taxa_count_time_course
+metagenome_taxa_count_time_course_log$Percent_of_Population<-log10(metagenome_taxa_count_time_course_log$Percent_of_Population)
+
+
+# Converting percentages to logs
+metagenome_taxa_percentage_time_course_log<- metagenome_taxa_percentage_time_course
+metagenome_taxa_percentage_time_course_log$Percent_of_Population<-log10(metagenome_taxa_percentage_time_course_log$Percent_of_Population)
+
+```
+
+```{r}
+# Filtering to only include the "large correlated taxa" from percentages
+Medium_consolidation_Diaomea_and_Dictyochophyceae_metagenome_taxa_percentage_time_course_log <- metagenome_taxa_percentage_time_course_log %>% filter(str_detect(Taxa, "Stramenopiles.Diatomea.Bacillariophytina.and.Coscinodiscophytina.and.otherDiatomea|Stramenopiles.Diatomea.ME-Euk-FW10|Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae|Stramenopiles.Dictyochophyceae.Pedinellales"))
+```
+
+
+"Stramenopiles.Diatomea.Bacillariophytina.and.Coscinodiscophytina.and.otherDiatomea|Stramenopiles.Diatomea.ME-Euk-FW10"
+
+
+
+
+```{r}
+
+# maximum
+
+# source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//maximum_consolidation_functions//data_for_pca_formating_updatedSept2022_no_percentage_maximum_consolidation.R")
+source("..//..//Functions//maximum_consolidation_functions//metagenome_taxa_removed_updatedSept2022_no_percentage_maximum_consolidation.R")
+
+source("..//..//Functions//maximum_consolidation_functions//Taxa_DF_updatedSept2022_no_percentage_maximum_consolidation.R")
+
+```
+
+
+
+```{r}
+data_for_pca<-data_for_pca()
+metagenome_taxa<-metagenome_taxa_removed()
+```
+
+```{r}
+metagenome_taxa_percentage <-Percentage_Function(metagenome_taxa)
+```
+
+```{r}
+# Format the table for ggplot
+metagenome_taxa_count_time_course<-setNames(melt(metagenome_taxa), c('Taxa', 'Date', 'Percent_of_Population'))
+metagenome_taxa_percentage_time_course<-setNames(melt(metagenome_taxa_percentage), c('Taxa', 'Date', 'Percent_of_Population'))
+```
+
+```{r}
+# Convert numbers to log base 10 so that its easier to graph
+# Converting Percent_of_Population to logs
+metagenome_taxa_count_time_course_log<- metagenome_taxa_count_time_course
+metagenome_taxa_count_time_course_log$Percent_of_Population<-log10(metagenome_taxa_count_time_course_log$Percent_of_Population)
+
+
+# Converting percentages to logs
+metagenome_taxa_percentage_time_course_log<- metagenome_taxa_percentage_time_course
+metagenome_taxa_percentage_time_course_log$Percent_of_Population<-log10(metagenome_taxa_percentage_time_course_log$Percent_of_Population)
+
+```
+
+```{r}
+# Filtering to only include the "large correlated taxa" from percentages
+Maximum_consolidation_Diaomea_and_Dictyochophyceae_metagenome_taxa_percentage_time_course_log <- metagenome_taxa_percentage_time_course_log %>% filter(str_detect(Taxa, "Stramenopiles.Diatomea.all|Stramenopiles.Dictyochophyceae.all"))
+```
+
+
+"Stramenopiles.Diatomea.all"
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+No_consolidation_time_course<- ggplot(No_consolidation_Diaomea_and_Dictyochophyceae_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+  geom_line(size=1.4) +
+  ggtitle("No_consolidation_Diaomea_and_Dictyochophyceae_metagenome_taxa_percentage_time_course_log") +
+    theme(axis.text = element_text(angle = -45))
+#+
+  # theme(axis.text.x=element_blank(),
+  #     axis.ticks.x=element_blank(),
+  #      axis.title.x=element_blank()) 
+      
+```
+
+
+
+```{r}
+Minimum_consolidation_time_course<- ggplot(Minimum_consolidation_Diaomea_and_Dictyochophyceae_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+  geom_line(size=1.4) +
+  ggtitle("Minimum_consolidation_Diaomea_and_Dictyochophyceae_metagenome_taxa_percentage_time_course_log") +
+    theme(axis.text = element_text(angle = -45))
+# +
+#   theme(axis.text.x=element_blank(),
+#       axis.ticks.x=element_blank(),
+#        axis.title.x=element_blank()) 
+      
+```
+
+
+
+
+
+```{r}
+Medium_consolidation_time_course<- ggplot(Medium_consolidation_Diaomea_and_Dictyochophyceae_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+  geom_line(size=1.4) +
+  ggtitle("Medium_consolidation_Diaomea_and_Dictyochophyceae_metagenome_taxa_percentage_time_course_log") +
+      theme(axis.text = element_text(angle = -45))
+
+# +
+#   theme(axis.text.x=element_blank(),
+#       axis.ticks.x=element_blank(),
+#        axis.title.x=element_blank()) 
+      
+```
+
+
+
+
+```{r}
+Maximum_consolidation_time_course<- ggplot(Maximum_consolidation_Diaomea_and_Dictyochophyceae_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+  geom_line(size=1.4) +
+  ggtitle("Maximum_consolidation_Diaomea_and_Dictyochophyceae_metagenome_taxa_percentage_time_course_log") +
+      theme(axis.text = element_text(angle = -45))
+
+# +
+#   theme(axis.text.x=element_blank(),
+#       axis.ticks.x=element_blank(),
+#        axis.title.x=element_blank()) 
+#       
+```
+
+
+
+
+
+
+```{r}
+ggarrange(No_consolidation_time_course, Minimum_consolidation_time_course, Medium_consolidation_time_course, Maximum_consolidation_time_course, heights = c(2, 2), ncol = 2, nrow = 2, align = "hv", hjust = 10)+
+      theme(plot.margin = margin(0,0,50,0, "pt")) 
+```
+
+

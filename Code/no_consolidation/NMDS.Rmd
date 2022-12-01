@@ -1,0 +1,376 @@
+---
+title: "NMDS"
+author: "Idan Siman-Tov"
+date: '2022-06-13'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+library(vegan)
+library(ggvegan)
+
+
+
+source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//no_consolidation_functions//data_for_pca_formating.R")
+# source("..//..//Functions//no_consolidation_functions//metagenome_taxa_removed.R")
+
+source("..//..//Functions//no_consolidation_functions//Taxa_DF.R")
+
+```
+
+
+
+```{r}
+data_for_pca<-data_for_pca()
+```
+
+
+```{r}
+
+Temperature...C. <-data_for_pca[1]
+Conductivity..S.m.<-data_for_pca[2]
+Pressure..dbar.<-data_for_pca[3]
+Fluorescence..mg.m.<-data_for_pca[4]
+Salinity<-data_for_pca[5]
+Depth..m.<-data_for_pca[6]
+Density..kg.m.<-data_for_pca[7]
+Chlorophyll..mg.m.<-data_for_pca[8]
+Phaeopigment..mg.m.<-data_for_pca[9]
+Phosphate..µmol.L.<-data_for_pca[10]
+Silicate..µmol.L.<-data_for_pca[11]
+Nitrite.and.Nitrate..µmol.L.<-data_for_pca[12]
+Primary.Prod...mg.m.day.<-data_for_pca[13]
+Prim.Prod.STD..mg.m.day.<-data_for_pca[14]
+
+```
+
+
+
+
+
+```{r}
+
+
+Alveolata.Dinoflagellata<-Alveolata.Dinoflagellata()
+Alveolata.otherAlveolata<- Alveolata.otherAlveolata()
+Archaeplastida.Chlorophyta<- Archaeplastida.Chlorophyta()
+Archaeplastida.otherArchaeplastida<- Archaeplastida.otherArchaeplastida()
+Cryptophyceae.Cryptomonadales.Geminigera<- Cryptophyceae.Cryptomonadales.Geminigera()
+Cryptophyceae.otherCryptophyceae<- Cryptophyceae.otherCryptophyceae()
+Excavata.Discoba.Jakobida<- Excavata.Discoba.Jakobida()
+Haptophyta.Phaeocystis<- Haptophyta.Phaeocystis()
+Picozoa.otherPicozoa<- Picozoa.otherPicozoa()
+Rhizaria.Cercozoa<- Rhizaria.Cercozoa()
+Rhizaria.otherRhizaria<- Rhizaria.otherRhizaria()
+SAR_unclassified<- SAR_unclassified()
+Stramenopiles.Diatomea.Bacillariophytina<- Stramenopiles.Diatomea.Bacillariophytina()
+Stramenopiles.Diatomea.Coscinodiscophytina<- Stramenopiles.Diatomea.Coscinodiscophytina()
+Stramenopiles.Diatomea.otherDiatomea<- Stramenopiles.Diatomea.otherDiatomea()
+Stramenopiles.Dictyochophyceae.Dictyochales<- Stramenopiles.Dictyochophyceae.Dictyochales()
+Stramenopiles.Dictyochophyceae.Florenciellales<- Stramenopiles.Dictyochophyceae.Florenciellales()
+Stramenopiles.Dictyochophyceae.otherDictyochophyceae<- Stramenopiles.Dictyochophyceae.otherDictyochophyceae()
+Stramenopiles.Dictyochophyceae.Pedinellales<- Stramenopiles.Dictyochophyceae.Pedinellales()
+Stramenopiles.Ochrophyta.other<- Stramenopiles.Ochrophyta.other()
+Stramenopiles.otherStramenopiles<- Stramenopiles.otherStramenopiles()
+Stramenopiles.Phaeophyceae<- Stramenopiles.Phaeophyceae()
+Stramenopiles.Diatomea.ME_Euk_FW10<- Stramenopiles.Diatomea.ME_Euk_FW10()
+Stramenopiles.MAST_2<- Stramenopiles.MAST_2()
+Stramenopiles.MAST_3<- Stramenopiles.MAST_3()
+Picozoa.Picomonadida<-Picozoa.Picomonadida()
+```
+
+
+
+```{r}
+
+Alveolata.Dinoflagellata<-data.frame(Alveolata.Dinoflagellata=Alveolata.Dinoflagellata[-c(2,7),])
+Alveolata.otherAlveolata<-data.frame(Alveolata.otherAlveolata=Alveolata.otherAlveolata[-c(2,7),])
+Archaeplastida.Chlorophyta<-data.frame(Archaeplastida.Chlorophyta=Archaeplastida.Chlorophyta[-c(2,7),])
+Archaeplastida.otherArchaeplastida<-data.frame(Archaeplastida.otherArchaeplastida=Archaeplastida.otherArchaeplastida[-c(2,7),])
+Cryptophyceae.Cryptomonadales.Geminigera<-data.frame(Cryptophyceae.Cryptomonadales.Geminigera=Cryptophyceae.Cryptomonadales.Geminigera[-c(2,7),])
+Cryptophyceae.otherCryptophyceae<-data.frame(Cryptophyceae.otherCryptophyceae=Cryptophyceae.otherCryptophyceae[-c(2,7),])
+Excavata.Discoba.Jakobida<-data.frame(Excavata.Discoba.Jakobida=Excavata.Discoba.Jakobida[-c(2,7),])
+Haptophyta.Phaeocystis<-data.frame(Haptophyta.Phaeocystis=Haptophyta.Phaeocystis[-c(2,7),])
+Picozoa.otherPicozoa<-data.frame(Picozoa.otherPicozoa=Picozoa.otherPicozoa[-c(2,7),])
+Rhizaria.Cercozoa<-data.frame(Rhizaria.Cercozoa=Rhizaria.Cercozoa[-c(2,7),])
+Rhizaria.otherRhizaria<-data.frame(Rhizaria.otherRhizaria=Rhizaria.otherRhizaria[-c(2,7),])
+SAR_unclassified<-data.frame(SAR_unclassified=SAR_unclassified[-c(2,7),])
+Stramenopiles.Diatomea.Bacillariophytina<-data.frame(Stramenopiles.Diatomea.Bacillariophytina=Stramenopiles.Diatomea.Bacillariophytina[-c(2,7),])
+Stramenopiles.Diatomea.Coscinodiscophytina<-data.frame(Stramenopiles.Diatomea.Coscinodiscophytina=Stramenopiles.Diatomea.Coscinodiscophytina[-c(2,7),])
+Stramenopiles.Diatomea.otherDiatomea<-data.frame(Stramenopiles.Diatomea.otherDiatomea=Stramenopiles.Diatomea.otherDiatomea[-c(2,7),])
+Stramenopiles.Dictyochophyceae.Dictyochales<-data.frame(Stramenopiles.Dictyochophyceae.Dictyochales=Stramenopiles.Dictyochophyceae.Dictyochales[-c(2,7),])
+Stramenopiles.Dictyochophyceae.Florenciellales<-data.frame(Stramenopiles.Dictyochophyceae.Florenciellales=Stramenopiles.Dictyochophyceae.Florenciellales[-c(2,7),])
+Stramenopiles.Dictyochophyceae.otherDictyochophyceae<-data.frame(Stramenopiles.Dictyochophyceae.otherDictyochophyceae=Stramenopiles.Dictyochophyceae.otherDictyochophyceae[-c(2,7),])
+Stramenopiles.Dictyochophyceae.Pedinellales<-data.frame(Stramenopiles.Dictyochophyceae.Pedinellales=Stramenopiles.Dictyochophyceae.Pedinellales[-c(2,7),])
+Stramenopiles.Ochrophyta.other<-data.frame(Stramenopiles.Ochrophyta.other=Stramenopiles.Ochrophyta.other[-c(2,7),])
+Stramenopiles.otherStramenopiles<-data.frame(Stramenopiles.otherStramenopiles=Stramenopiles.otherStramenopiles[-c(2,7),])
+Stramenopiles.Phaeophyceae<-data.frame(Stramenopiles.Phaeophyceae=Stramenopiles.Phaeophyceae[-c(2,7),])
+Stramenopiles.Diatomea.ME_Euk_FW10<-data.frame(Stramenopiles.Diatomea.ME_Euk_FW10=Stramenopiles.Diatomea.ME_Euk_FW10[-c(2,7),])
+Stramenopiles.MAST_2<-data.frame(Stramenopiles.MAST_2=Stramenopiles.MAST_2[-c(2,7),])
+Stramenopiles.MAST_3<-data.frame(Stramenopiles.MAST_3=Stramenopiles.MAST_3[-c(2,7),])
+Picozoa.Picomonadida<-data.frame(Picozoa.Picomonadida=Picozoa.Picomonadida[-c(2,7),])
+```
+
+
+```{r}
+Large_corl <- do.call("cbind", list(Fluorescence..mg.m., Chlorophyll..mg.m., Phosphate..µmol.L., Archaeplastida.otherArchaeplastida, Archaeplastida.Chlorophyta, Picozoa.otherPicozoa, Rhizaria.otherRhizaria, Stramenopiles.Diatomea.Bacillariophytina, Stramenopiles.Diatomea.Coscinodiscophytina, Stramenopiles.Diatomea.otherDiatomea))
+```
+
+
+
+```{r}
+Large_corl <- do.call("cbind", list(data_for_pca, Archaeplastida.otherArchaeplastida, Archaeplastida.Chlorophyta, Picozoa.otherPicozoa, Rhizaria.otherRhizaria, Stramenopiles.Diatomea.Bacillariophytina, Stramenopiles.Diatomea.Coscinodiscophytina, Stramenopiles.Diatomea.otherDiatomea))
+
+```
+
+```{r}
+# Changing the temp to kelvin becuse it cant have negative numbers
+data_for_pca$Temperature...C.<-data_for_pca$Temperature...C.+273.15
+names(data_for_pca)[1] <- "Temperature...K."
+```
+
+
+```{r}
+
+Group_1 <- do.call("cbind", list(data_for_pca, Archaeplastida.otherArchaeplastida, Stramenopiles.Diatomea.Bacillariophytina, Stramenopiles.Diatomea.Coscinodiscophytina, Stramenopiles.Diatomea.otherDiatomea, Stramenopiles.otherStramenopiles, Stramenopiles.Dictyochophyceae.Dictyochales, SAR_unclassified))
+
+Group_2<- do.call("cbind", list(data_for_pca, Picozoa.Picomonadida, Cryptophyceae.Cryptomonadales.Geminigera, Rhizaria.Cercozoa))
+
+Group_3<- do.call("cbind", list(data_for_pca, Picozoa.otherPicozoa, Archaeplastida.Chlorophyta, Archaeplastida.otherArchaeplastida, Rhizaria.otherRhizaria))
+
+Independent_Group_1 <- do.call("cbind", list(data_for_pca, Stramenopiles.MAST_3, Stramenopiles.Dictyochophyceae.Florenciellales))
+
+Independent_Group_2 <- do.call("cbind", list(data_for_pca, Stramenopiles.Diatomea.ME_Euk_FW10, Stramenopiles.Dictyochophyceae.Pedinellales))
+
+```
+
+
+```{r}
+# removing metagenome database dates
+Group_1<-Group_1[-c(2,3,4,6),]
+
+Group_2<-Group_2[-c(2,3,4,6),]
+
+Group_3<-Group_3[-c(2,3,4,6),]
+
+Independent_Group_1<-Independent_Group_1[-c(2,3,4,6),]
+  
+Independent_Group_2<-Independent_Group_2[-c(2,3,4,6),]
+  
+```
+
+
+
+```{r}
+Date<-data.frame(
+    Date= c("2012-11-27","2012-11-30.metagenome","2012-12-10.metagenome","2012-12-17.metagenome","2013-02-08","2013-02-15.metagenome","2013-12-27","2014-01-23","2014-02-03","2014-02-10","2014-02-28","2014-03-04","2014-12-01","2014-12-11","2015-01-12","2015-01-19","2015-02-09","2015-02-23","2015-03-09"))
+```
+
+
+
+NMDS
+
+```{r}
+Large_corl_NMDS<-Large_corl
+# # converting temperature to k because i got a warrning about negative numbers
+# Large_corl_NMDS$Temperature...C.<-Large_corl_NMDS$Temperature...C.+273.15
+# names(Large_corl_NMDS)[1] <- "Temperature...K."
+```
+
+
+```{r}
+set.seed(1)
+# running the nmds calculations using default setting
+NMDS <- metaMDS(Large_corl_NMDS, distance= "bray", k=2)
+
+# NMDS_Group_1 <- metaMDS(Group_1, distance= "bray", k=2)
+# NMDS_Group_2 <- metaMDS(Group_2, distance= "bray", k=2)
+# NMDS_Group_3 <- metaMDS(Group_3, distance= "bray", k=2)
+# NMDS_Independent_Group_1 <- metaMDS(Independent_Group_1, distance= "bray", k=2)
+# NMDS_Independent_Group_2 <- metaMDS(Independent_Group_2, distance= "bray", k=2)
+
+```
+
+```{r}
+# running a shepherd plot. im not sure exactly but im pretty sure the results are good
+stressplot(NMDS)
+```
+
+
+
+```{r}
+# plotting the vectos and the points. i might want make the points days and season like in the PCA but that's for later
+plot(NMDS, "sites")
+
+fit <- envfit(NMDS, Large_corl_NMDS, permu=999)
+
+plot(fit, cex =1.5)
+```
+NMDS_Group_1 
+NMDS_Group_2
+NMDS_Group_3 
+NMDS_Independent_Group_1
+NMDS_Independent_Group_2
+
+
+Group_1
+
+Group_2
+
+Group_3
+
+Independent_Group_1
+  
+Independent_Group_2
+
+
+
+
+
+
+```{r}
+plot(NMDS_Group_1, "sites")
+NMDS_Group_1_fit <- envfit(NMDS_Group_1, Group_1, permu=999)
+plot(NMDS_Group_1_fit, cex =1.5, main = "NMDS_Group_1_fit")
+
+
+
+plot(NMDS_Group_2, "sites")
+NMDS_Group_2_fit <- envfit(NMDS_Group_2, Group_2, permu=999)
+plot(NMDS_Group_2_fit, cex =1.5)
+
+
+plot(NMDS_Group_3, "sites")
+NMDS_Group_3_fit <- envfit(NMDS_Group_3, Group_3, permu=999)
+plot(NMDS_Group_3_fit, cex =1.5)
+
+
+plot(NMDS_Independent_Group_1, "sites")
+NMDS_Independent_Group_1_fit <- envfit(NMDS_Independent_Group_1, Independent_Group_1, permu=999)
+plot(NMDS_Independent_Group_1_fit, cex =1.5)
+
+
+plot(NMDS_Independent_Group_2, "sites")
+NMDS_Independent_Group_2_fit <- envfit(NMDS_Independent_Group_2, Independent_Group_1, permu=999)
+plot(NMDS_Independent_Group_2_fit, cex =1.5)
+
+```
+
+
+```{r}
+plot(NMDS_Group_1, shape=1)
+plot(NMDS_Group_2, shape=1)
+
+```
+
+```{r}
+plot(NMDS, shape=1)
+```
+
+
+```{r}
+NMDS$points
+```
+
+
+```{r}
+scores(NMDS) %>%
+  as_tibble(rownames = "")
+```
+
+
+
+
+
+```{r}
+# scores(NMDS)
+NMDS$species
+```
+
+
+
+
+
+
+
+```{r}
+biplot(NMDS, scaling=1, main = "yo")
+```
+
+
+
+
+
+
+
+
+```{r}
+Large.hel<- decostand(Large_corl_NMDS, method = "hellinger")
+Large.hel<- subset(Large.hel, select = -c(`Fluorescence..mg.m³.`,`Phaeopigment..mg.m³.`))
+nmds1<-metaMDS(Large.hel, try=50, autotransform = F)
+```
+
+
+```{r}
+ordiplot(nmds1, type = "t", cex=2)
+```
+
+
+```{r}
+autoplot(nmds1)
+```
+
+```{r}
+fort<-fortify(nmds1)
+ggplot()+
+  geom_point(data=subset(fort,Score=="sites"),
+             mapping = aes(x=NMDS1, y=NMDS2),
+             colour="black",
+             alpha=0.5)
+  # geom_segment()
+
+```
+
+
+```{r}
+fort<-fortify(nmds1)
+ggplot()+
+  geom_point(data=subset(fort,Score=="sites"),
+             mapping = aes(x=NMDS1, y=NMDS2),
+             colour=Date$Date,
+             size=5)+
+  geom_text(data=subset(fort, Score=="species"),
+            mapping = aes(label=Label, x=NMDS1, y=NMDS2),
+            alpha=0)
+  # scale_color_discrete("Date")
+ordiplot(nmds1, type = "t", cex = 1)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

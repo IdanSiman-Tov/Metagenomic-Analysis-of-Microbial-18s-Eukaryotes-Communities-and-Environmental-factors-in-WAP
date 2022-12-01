@@ -1,0 +1,96 @@
+---
+title: "testing"
+author: "Idan Siman-Tov"
+date: '2022-10-07'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+library(ggpubr)
+library(ggrepel)
+library(webr)
+```
+
+
+```{r}
+source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//minimum_consolidation_functions//data_for_pca_formating_updatedSept2022_no_percentage_minimum_consolidation.R")
+source("..//..//Functions//minimum_consolidation_functions//metagenome_taxa_removed_updatedSept2022_no_percentage_minimum_consolidation.R")
+
+source("..//..//Functions//minimum_consolidation_functions//Taxa_DF_updatedSept2022_no_percentage_minimum_consolidation.R")
+```
+
+
+```{r}
+Metagenome <- read.xlsx("..//..//18s_Metagnome//18s_andMetagenome_taxaCounts_updatedSept2022_no_percentage.xlsx", sheetIndex=3, header= FALSE)
+```
+
+
+
+
+```{r}
+Metagenome_average_counts <-metagenome_taxa_removed()
+```
+
+
+
+
+
+
+```{r}
+p<-Percentage_Function(Metagenome_average_counts)
+```
+
+
+
+```{r}
+z<-p[1]
+
+```
+
+```{r}
+z["new"]<-p$`2012-11-27` + p$`2013-02-08`
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

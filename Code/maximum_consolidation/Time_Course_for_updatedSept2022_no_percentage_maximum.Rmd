@@ -1,0 +1,394 @@
+---
+title: "Time_Course2"
+author: "Idan Siman-Tov"
+date: '2022-06-11'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+library(ggpubr)
+library(ggnewscale)
+
+
+
+
+
+source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//maximum_consolidation_functions//data_for_pca_formating_updatedSept2022_no_percentage_maximum_consolidation.R")
+source("..//..//Functions//maximum_consolidation_functions//metagenome_taxa_removed_updatedSept2022_no_percentage_maximum_consolidation.R")
+
+source("..//..//Functions//maximum_consolidation_functions//Taxa_DF_updatedSept2022_no_percentage_maximum_consolidation.R")
+
+```
+
+
+```{r}
+data_for_pca<-data_for_pca()
+metagenome_taxa<-metagenome_taxa_removed()
+```
+
+
+```{r}
+metagenome_taxa_percentage <-Percentage_Function(metagenome_taxa)
+```
+
+
+
+
+```{r}
+# Format the table for ggplot
+metagenome_taxa_count_time_course<-setNames(melt(metagenome_taxa), c('Taxa', 'Date', 'Percent_of_Population'))
+metagenome_taxa_percentage_time_course<-setNames(melt(metagenome_taxa_percentage), c('Taxa', 'Date', 'Percent_of_Population'))
+```
+
+
+
+
+```{r}
+# Convert numbers to log base 10 so that its easier to graph
+# Converting Percent_of_Population to logs
+metagenome_taxa_count_time_course_log<- metagenome_taxa_count_time_course
+metagenome_taxa_count_time_course_log$Percent_of_Population<-log10(metagenome_taxa_count_time_course_log$Percent_of_Population)
+
+
+# Converting percentages to logs
+metagenome_taxa_percentage_time_course_log<- metagenome_taxa_percentage_time_course
+metagenome_taxa_percentage_time_course_log$Percent_of_Population<-log10(metagenome_taxa_percentage_time_course_log$Percent_of_Population)
+
+```
+
+
+
+
+```{r}
+
+# Filtering to only include the "Group 1" from percentages
+Group_1_metagenome_taxa_percentage_time_course_log <- metagenome_taxa_percentage_time_course_log %>% filter(str_detect(Taxa, "Archaeplastida.Chlorophyta.and.otherArchaeplastida|Stramenopiles.Dictyochophyceae.all"))
+
+# Filtering to only include the "Group 2" from percentages
+Group_2_metagenome_taxa_percentage_time_course_log <- metagenome_taxa_percentage_time_course_log %>% filter(str_detect(Taxa, "Excavata.Discoba.Jakobida|Cryptophyceae.Geminigera.and.otherCryptophyceae|Stramenopiles.Diatomea.all|Eukaryota_other"))
+
+# Filtering to only include the "Group 3" from percentages
+Group_3_metagenome_taxa_percentage_time_course_log <- metagenome_taxa_percentage_time_course_log %>% filter(str_detect(Taxa, "Picozoa.Picomonadida"))
+
+# Filtering to only include the "Group 4" from percentages
+Group_4_metagenome_taxa_percentage_time_course_log <- metagenome_taxa_percentage_time_course_log %>% filter(str_detect(Taxa, "Rhizaria.Cercozoa"))
+```
+
+
+
+```{r}
+# Graphing the time course
+
+
+# Percent
+ ggplot(Group_1_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("Group_1_metagenome_taxa_percentage_time_course_log") +
+    theme(axis.text = element_text(angle = -45))
+
+# Percent
+ ggplot(Group_2_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("Group_2_metagenome_taxa_percentage_time_course_log") +
+    theme(axis.text = element_text(angle = -45))
+
+# Percent
+ ggplot(Group_3_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("Group_3_metagenome_taxa_percentage_time_course_log") +
+    theme(axis.text = element_text(angle = -45))
+
+# Percent
+ggplot(Group_4_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+  geom_line(size=1.4) +
+  ggtitle("Group_4_metagenome_taxa_percentage_time_course_log") +
+  theme(axis.text = element_text(angle = -45))
+
+
+```
+
+
+
+```{r}
+# Filtering to only include the "Group 2" from percentages
+# All_metagenome_taxa_percentage_time_course_log <- metagenome_taxa_percentage_time_course_log %>% filter(str_detect(Taxa, "Excavata.Discoba.Jakobida|Haptophyta.non_Phaeocystis|Eukaryota_other"))
+
+# Percent
+ ggplot(metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("All_metagenome_taxa_percentage_time_course_log") +
+    theme(axis.text = element_text(angle = -45))
+```
+
+
+
+
+
+
+
+Heat map
+
+```{r}
+Date<-data.frame(
+    Date= c("2012-11-27","2013-02-08","2013-12-27","2014-01-23","2014-02-03","2014-02-10","2014-02-28","2014-03-04","2014-12-01","2014-12-11","2015-01-12","2015-01-19","2015-02-09","2015-02-23","2015-03-09"))
+```
+
+```{r}
+Enviromental_data<- cbind(Date,data_for_pca)
+```
+
+```{r}
+Enviromental_data<-t(Enviromental_data)
+```
+
+```{r}
+Enviromental_data<-janitor::row_to_names(Enviromental_data, 1, TRUE)
+```
+
+```{r}
+Enviromental_data_melt<-setNames(melt(Enviromental_data), c('Enviromental', 'Date', 'Value'))
+
+```
+
+```{r}
+Enviromental_data_melt[,3]<- sapply(Enviromental_data_melt[,3], as.numeric)
+```
+
+
+
+
+
+
+Temperature...C.
+orangered2
+
+Conductivity..S.m.
+yellow2
+
+Pressure..dbar.
+dodgerblue
+
+Fluorescence..mg.m³.
+limegreen
+
+Salinity
+gold2
+
+Depth..m.
+darkblue
+
+Density..kg.m³.
+deepskyblue3
+
+Chlorophyll..mg.m³.
+seagreen
+
+Phaeopigment..mg.m³.
+lightseagreen
+
+Phosphate..µmol.L.
+slateblue
+
+Silicate..µmol.L.
+chartreuse3
+
+Nitrite.and.Nitrate..µmol.L.
+firebrick2
+
+Primary.Prod...mg.m³.day.
+coral2
+
+Prim.Prod.STD..mg.m³.day.
+
+
+
+
+
+
+
+
+
+
+group 1 with primary production and phosphate
+
+```{r}
+Group_1_time_course<- ggplot(Group_1_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+  geom_line(size=1.4) +
+  ggtitle("Group_1_metagenome_taxa_percentage_time_course_log") +
+  theme(axis.text.x=element_blank(),
+      axis.ticks.x=element_blank(),
+       axis.title.x=element_blank()) 
+      
+```
+
+```{r}
+Group_1_time_heatmap<-ggplot() +
+  
+  # Stramenopiles.Dictyochophyceae.all with temp
+  geom_raster(data = filter(Enviromental_data_melt, Enviromental == "Temperature...C."), aes(x = Date, y = Enviromental, fill = Value)) +
+  scale_fill_gradient2(low = "white", mid = "orangered2", high = "darkslategrey", midpoint = 0.5, name = "Temperature...C.") +
+  new_scale_fill()+
+
+  
+  # Stramenopiles.Dictyochophyceae.all with Density..kg.m³
+  geom_raster(data = filter(Enviromental_data_melt, Enviromental == "Density..kg.m³."), aes(x = Date, y = Enviromental, fill = Value)) +
+  scale_fill_gradient2(low = "white", mid = "deepskyblue3", high = "darkslategrey", midpoint = 1027, name = "Density..kg.m³.") +
+  new_scale_fill()+
+  
+  
+  # Archaeplastida.Chlorophyta.and.otherArchaeplastida with phospate
+  geom_raster(data = filter(Enviromental_data_melt, Enviromental == "Phosphate..µmol.L."), aes(x = Date, y = Enviromental, fill = Value)) +
+  scale_fill_gradient2(low = "white", mid = "slateblue", high = "darkslategrey", midpoint = 1.5, name = "Phosphate..µmol.L.") +
+  new_scale_fill() #+
+  # theme(plot.margin.bottom = 100)
+
+  
+
+
+```
+
+```{r}
+ggarrange(Group_1_time_course, Group_1_time_heatmap, heights = c(2, 0.5), ncol = 1, nrow = 2, align = "hv", hjust = 10)+
+  theme(plot.margin = margin(0,0,100,0, "pt")) 
+```
+
+
+Temperature...C.
+orangered2
+
+Conductivity..S.m.
+yellow2
+
+
+
+
+
+group 2 with temp
+
+```{r}
+Group_2_time_course<- ggplot(Group_2_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+  geom_line(size=1.4) +
+  ggtitle("Group_2_metagenome_taxa_percentage_time_course_log") +
+  theme(axis.text.x=element_blank(),
+      axis.ticks.x=element_blank(),
+       axis.title.x=element_blank()) 
+      
+```
+
+```{r}
+Group_2_time_heatmap<-ggplot() +
+  
+  # Stramenopiles.Diatomea.all and temp
+  geom_raster(data = filter(Enviromental_data_melt, Enviromental == "Temperature...C."), aes(x = Date, y = Enviromental, fill = Value)) +
+  scale_fill_gradient2(low = "white", mid = "orangered2", high = "darkslategrey", midpoint = 0.5, name = "Temperature...C.") +
+  new_scale_fill() 
+
+```
+
+```{r}
+ggarrange(Group_2_time_course, Group_2_time_heatmap, heights = c(2, 0.5), ncol = 1, nrow = 2, align = "hv", hjust = 10)
+```
+
+
+
+
+
+
+group 3 with temp and conductivity
+
+```{r}
+Group_3_time_course<- ggplot(Group_3_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+  geom_line(size=1.4) +
+  ggtitle("Group_3_metagenome_taxa_percentage_time_course_log") +
+  theme(axis.text.x=element_blank(),
+      axis.ticks.x=element_blank(),
+       axis.title.x=element_blank()) 
+      
+```
+
+```{r}
+Group_3_time_heatmap<-ggplot() +
+  
+  # Picozoa.Picomonadida and temp
+  geom_raster(data = filter(Enviromental_data_melt, Enviromental == "Temperature...C."), aes(x = Date, y = Enviromental, fill = Value)) +
+  scale_fill_gradient2(low = "white", mid = "orangered2", high = "darkslategrey", midpoint = 0.5, name = "Temperature...C.") +
+  new_scale_fill()+
+
+  # Picozoa.Picomonadida and Conductivity..S.m.
+  geom_raster(data = filter(Enviromental_data_melt, Enviromental == "Conductivity..S.m."), aes(x = Date, y = Enviromental, fill = Value)) +
+  scale_fill_gradient2(low = "white", mid = "yellow2", high = "darkslategrey", midpoint = 2.8, name = "Conductivity..S.m.") +
+  new_scale_fill() 
+
+```
+
+```{r}
+ggarrange(Group_3_time_course, Group_3_time_heatmap, heights = c(2, 0.5), ncol = 1, nrow = 2, align = "hv", hjust = 10)+
+    theme(plot.margin = margin(0,0,50,0, "pt")) 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+group 4 with Primary.Prod...mg.m³.day.
+
+```{r}
+Group_4_time_course<- ggplot(Group_4_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Percent_of_Population, group=Taxa, color=Taxa)) +
+  geom_line(size=1.4) +
+  ggtitle("Group_4_metagenome_taxa_percentage_time_course_log") +
+  theme(axis.text.x=element_blank(),
+      axis.ticks.x=element_blank(),
+       axis.title.x=element_blank()) 
+      
+```
+
+```{r}
+Group_4_time_heatmap<-ggplot() +
+  
+  # Rhizaria.Cercozoa and primary production
+  geom_raster(data = filter(Enviromental_data_melt, Enviromental == "Primary.Prod...mg.m³.day."), aes(x = Date, y = Enviromental, fill = Value)) +
+  scale_fill_gradient2(low = "white", mid = "coral2", high = "darkslategrey", midpoint = 450, name = "Primary.Prod...mg.m³.day.") +
+  new_scale_fill()
+
+```
+
+```{r}
+ggarrange(Group_4_time_course, Group_4_time_heatmap, heights = c(2, 0.5), ncol = 1, nrow = 2, align = "hv", hjust = 10)
+```
+
+
+
+
+
+
+
+
+
+

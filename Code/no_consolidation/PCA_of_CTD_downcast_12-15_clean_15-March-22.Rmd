@@ -1,0 +1,248 @@
+---
+title: "PCA_of_CTD_downcast_12-15_clean_15-March-22"
+author: "Idan Siman-Tov"
+date: '2022-03-15'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Libraries
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+```
+
+```{r}
+# CTD_data <- read.xlsx(file.choose(), sheetIndex=1, header= TRUE)
+```
+
+
+Primary_Production_B.xlsx
+importing data
+```{r}
+CTD_data <- read.xlsx("..//..//CTD_data//CTD_B_downcast_12-15_clean.xlsx", sheetIndex=1, header= TRUE)
+```
+
+```{r}
+Chloropyll_data <- read.xlsx("..//..//Palmer_Station_Metadata//Chlorophyll_B.xlsx", sheetIndex=1, header= TRUE)
+# Dissolved_Inorganic_Nutrients_data <- read.xlsx("Palmer_Station_Metadata\\Dissolved_Inorganic_Nutrients_B.xlsx", sheetIndex=1, header= TRUE)
+
+# I added 2013-12-27 data point at 30m this will need to be address in the future for dissolved inorganic phosphate silicate and nitrate
+# I also added 2012-11-27 data point at 20m for Phosphate because the previous data point was -999
+Dissolved_Inorganic_Nutrients_data <- read.xlsx("..//..//Palmer_Station_Metadata//Dissolved_Inorganic_Nutrients_B_27_12_2013_at_30m_phosphate_B_27_11_2012_20m.xlsx", sheetIndex=1, header= TRUE)
+
+Primary_Production_B_data <- read.xlsx("..//..//Palmer_Station_Metadata//Primary_Production_B.xlsx", sheetIndex=1, header= TRUE)
+
+```
+
+
+
+```{r}
+# Dates that were used in metagenomics
+sample_dates <- c("2012-11-27", "2012-11-30", "2012-12-10", "2012-12-17", "2013-02-08", "2013-02-15", "2013-12-27", "2014-01-23", "2014-02-03", "2014-02-10", "2014-02-28", "2014-03-04", "2014-12-01", "2014-12-11", "2015-01-12", "2015-01-19", "2015-02-09", "2015-02-23", "2015-03-09")
+
+```
+
+Cropping
+```{r}
+# Filter rows out by dates
+Chloropyll_crop <- Chloropyll_data %>% filter(Date %in% sample_dates)
+
+# 2013-12-27 is missing
+Dissolved_Inorganic_Nutrients_crop <- Dissolved_Inorganic_Nutrients_data %>% filter(Date %in% sample_dates)
+
+# Had to convert the dates to a character
+Primary_Production_B_data$Date <- as.character(Primary_Production_B_data$Date)
+Primary_Production_B_data_crop <- Primary_Production_B_data %>% filter(Date %in% sample_dates)
+
+```
+
+
+adding month stage
+```{r}
+# Using a pipe function to manipulate data 
+CTD_crop <- CTD_data%>%
+  # using a mutate function to add a summer stage based off of month data was collected
+  mutate(
+    Summer_Stage = if_else(str_detect(Date, "-10-") | str_detect(Date, "-11-"), "Early Summer", if_else(str_detect(Date, "-12-") | str_detect(Date, "-01-"), "Mid Summer", "Late Summer")),
+  )
+
+# I'm not sure how the "season"s are broken down into
+```
+
+
+```{r}
+# For some reason the Dates are doubles so I convert to a Char 
+CTD_data$Date <- as.character(CTD_data$Date)
+
+# Filter rows out by dates
+CTD_crop <- CTD_crop %>% filter(CTD_data$Date %in% sample_dates)
+```
+
+
+```{r}
+# Now that the dates have been cropped I am converting the dates from a character to a "date" data type
+CTD_crop$Date <- as.Date(CTD_crop$Date)
+```
+
+
+```{r}
+# combining the data sets
+data_for_pca <- cbind(CTD_crop[,3:9],Chloropyll_crop[,3:4])
+
+data_for_pca <- cbind(data_for_pca, Dissolved_Inorganic_Nutrients_crop [,3:5])
+
+data_for_pca <- cbind(data_for_pca, Primary_Production_B_data_crop [,3:4])
+```
+
+
+only 18S data from taxa counts sheet
+```{r}
+# This was causing duplication of data
+
+
+
+# creating a single data frame with all the data
+# data_for_pca <- merge(CTD_crop[,3:9],Chloropyll_crop[,3:4])
+# 
+# data_for_pca <- merge(data_for_pca, Dissolved_Inorganic_Nutrients_crop [,3:5])
+# 
+# data_for_pca <- merge(data_for_pca, Primary_Production_B_data_crop [,3:4])
+```
+
+
+```{r}
+# setting all depth to 10m
+# data_for_pca$Depth..m. <- 10
+# data_for_pca$Depth..m.[2] <- 10.001
+```
+
+
+
+
+
+```{r}
+ev_pca_res <- prcomp(data_for_pca, scale. = TRUE)
+
+# PCA
+autoplot(ev_pca_res, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size = 7)
+```
+
+```{r}
+# testing out conductivity and temp corolation
+
+ggplot(data_for_pca, aes(x=Temperature...C., y=Conductivity..S.m.)) +
+    geom_point() +
+    geom_smooth(method=lm, se=FALSE)
+
+
+ggplot(data_for_pca, aes(x=Temperature...C., y=Salinity)) +
+    geom_point() +
+    geom_smooth(method=lm, se=FALSE)
+
+ggplot(data_for_pca, aes(x=Temperature...C., y=`Density..kg.m³.`)) +
+    geom_point() +
+    geom_smooth(method=lm, se=FALSE)
+
+
+ggplot(data_for_pca, aes(x=Conductivity..S.m., y=Salinity)) +
+    geom_point() +
+    geom_smooth(method=lm, se=FALSE)
+
+ggplot(data_for_pca, aes(x=Conductivity..S.m., y=`Density..kg.m³.`)) +
+    geom_point() +
+    geom_smooth(method=lm, se=FALSE)
+
+ggplot(data_for_pca, aes(x=Salinity, y=`Density..kg.m³.`)) +
+    geom_point() +
+    geom_smooth(method=lm, se=FALSE)
+
+
+ggplot(data_for_pca, aes(x=Depth..m., y=Pressure..dbar.)) +
+    geom_point() +
+    geom_smooth(method=lm, se=FALSE)
+
+```
+
+
+
+```{r}
+# nitrate_temp <- merge(data_for_pca$Temperature...C.,data_for_pca$Nitrite.and.Nitrate..µmol.L.)
+
+```
+
+
+```{r}
+# making a new data frame for only temp and nitrates
+nitrate_temp <- data_for_pca %>% select(Temperature...C.,Nitrite.and.Nitrate..µmol.L.)
+ev_pca_res <- prcomp(nitrate_temp, scale. = TRUE)
+
+# PCA
+autoplot(ev_pca_res, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE)
+```
+
+```{r}
+# making a new data frame for only temp and nitrates
+con_temp <- data_for_pca %>% select(Temperature...C.,Conductivity..S.m.)
+ev_pca_res <- prcomp(con_temp, scale. = TRUE)
+
+# PCA
+autoplot(ev_pca_res, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE)
+```
+
+
+
+```{r}
+# I removed coulombs 1 and 2 because they were not numerical and i removed rows 10 and 88 because they were too large and scaled the graph out, likely outliers
+# data_for_pca <- CTD_data[-c(10,88),3:9]
+# 
+# ev_pca_res <- prcomp(data_for_pca, scale. = TRUE)
+```
+
+
+
+```{r}
+# autoplot(ev_pca_res, data = CTD_data[-c(10,88),], colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE)
+```
+
+
+
+
+```{r}
+# I wasn't a fan of this plot, takes 15ish mins to calculate and doesnt scale text with size so its not readable
+# ggpairs(data=data_for_pca, upper = list(continuous = wrap("cor", size = 2)))
+```
+
+
+
+```{r}
+# easier to glance at then the corrogram but the standard correlation colors are reversed
+ggcorr(data_for_pca)
+```
+
+
+```{r}
+# Blue means positive corolation
+corrgram(data_for_pca, order=TRUE, lower.panel=panel.shade, upper.panel=panel.cor, text.panel=panel.txt, main="Enviromental Data in PC2/PC1 Order")
+```
+
+```{r}
+corrgram(data_for_pca, order=TRUE, lower.panel=corrgram::panel.ellipse, upper.panel=panel.cor, text.panel=panel.txt, main="Enviromental Data in PC2/PC1 Order")
+```
+
+
+
+```{r}
+write.csv(data_for_pca, "data_for_pca.csv")
+
+```
+
+

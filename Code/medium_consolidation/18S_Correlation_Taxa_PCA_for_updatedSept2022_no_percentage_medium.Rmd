@@ -1,0 +1,296 @@
+---
+title: "18S_Correlation"
+author: "Idan Siman-Tov"
+date: '2022-03-26'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+library(vegan)
+
+
+source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//medium_consolidation_functions//data_for_pca_formating_updatedSept2022_no_percentage_medium_consolidation.R")
+source("..//..//Functions//medium_consolidation_functions//metagenome_taxa_removed_updatedSept2022_no_percentage_medium_consolidation.R")
+
+source("..//..//Functions//medium_consolidation_functions//Taxa_DF_updatedSept2022_no_percentage_medium_consolidation.R")
+
+```
+
+
+```{r}
+data_for_pca<-data_for_pca()
+```
+
+```{r}
+CTD_crop<-CTD_crop()
+```
+
+```{r}
+Metagenome_average_counts <-metagenome_taxa_removed()
+```
+
+
+
+
+
+```{r}
+
+Alveolata.Dinoflagellata<-Alveolata.Dinoflagellata()
+# Alveolata.otherAlveolata<- Alveolata.otherAlveolata()
+Archaeplastida.Chlorophyta.and.otherArchaeplastida<- Archaeplastida.Chlorophyta.and.otherArchaeplastida()
+# Cryptophyceae.Cryptomonadales.Geminigera<- Cryptophyceae.Cryptomonadales.Geminigera()
+# Cryptophyceae.otherCryptophyceae<- Cryptophyceae.otherCryptophyceae()
+Excavata.Discoba.Jakobida<- Excavata.Discoba.Jakobida()
+Haptophyta.non_Phaeocystis<-Haptophyta.non_Phaeocystis()
+Haptophyta.Phaeocystis<-Haptophyta.Phaeocystis()
+Picozoa.Picomonadida<-Picozoa.Picomonadida()
+Rhizaria.Cercozoa<- Rhizaria.Cercozoa()
+# Stramenopiles.Diatomea.Bacillariophytina<- Stramenopiles.Diatomea.Bacillariophytina()
+# Stramenopiles.Diatomea.Coscinodiscophytina<- Stramenopiles.Diatomea.Coscinodiscophytina()
+Stramenopiles.Diatomea.ME_Euk_FW10<-Stramenopiles.Diatomea.ME_Euk_FW10()
+# Stramenopiles.Diatomea.otherDiatomea<-Stramenopiles.Diatomea.otherDiatomea()
+Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae<-Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae()
+Stramenopiles.Dictyochophyceae.Pedinellales<-Stramenopiles.Dictyochophyceae.Pedinellales()
+Stramenopiles.MAST_2.and.MAST_3<-Stramenopiles.MAST_2.and.MAST_3()
+Stramenopiles.Ochrophyta.other<-Stramenopiles.Ochrophyta.other()
+# Stramenopiles.otherStramenopiles<-Stramenopiles.otherStramenopiles()
+Stramenopiles.Phaeophyceae<-Stramenopiles.Phaeophyceae()
+# SAR_unclassified<-SAR_unclassified()
+Eukaryota_other<-Eukaryota_other()
+```
+
+```{r}
+Cryptophyceae.Geminigera.and.otherCryptophyceae<-Cryptophyceae.Geminigera.and.otherCryptophyceae()
+
+Stramenopiles.Diatomea.Bacillariophytina.and.Coscinodiscophytina.and.otherDiatomea<- Stramenopiles.Diatomea.Bacillariophytina.and.Coscinodiscophytina.and.otherDiatomea()
+
+SAR_unclassified.and.otherStramenopiles.and.otherAlveolata<-SAR_unclassified.and.otherStramenopiles.and.otherAlveolata()
+```
+
+
+```{r}
+# removing Pressure, Depth, and the Standard deviation of the Primary production, this is not done on the other consolidation code
+data_for_pca<-data_for_pca[-c(3,6,14)]
+```
+
+
+```{r}
+# WILL NEED TO EDIT
+Big_PCA <- do.call("cbind", list(data_for_pca, 
+  Alveolata.Dinoflagellata,
+
+  Archaeplastida.Chlorophyta.and.otherArchaeplastida,
+
+
+  Excavata.Discoba.Jakobida,
+  Haptophyta.non_Phaeocystis,
+  Haptophyta.Phaeocystis,
+  Picozoa.Picomonadida,
+  Rhizaria.Cercozoa,
+
+
+  Stramenopiles.Diatomea.ME_Euk_FW10,
+  
+  Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae,
+  Stramenopiles.Dictyochophyceae.Pedinellales,
+  Stramenopiles.MAST_2.and.MAST_3,
+  Stramenopiles.Ochrophyta.other,
+ 
+  Stramenopiles.Phaeophyceae,
+
+  Eukaryota_other,
+  
+  
+  Cryptophyceae.Geminigera.and.otherCryptophyceae,
+  Stramenopiles.Diatomea.Bacillariophytina.and.Coscinodiscophytina.and.otherDiatomea,
+  SAR_unclassified.and.otherStramenopiles.and.otherAlveolata
+))
+```
+
+
+
+```{r}
+# corrgram(Archaeplastida.Chlorophyta_PCA, order=TRUE, lower.panel=panel.shade, upper.panel=panel.cor, text.panel=panel.txt)
+```
+
+
+
+
+```{r}
+ggcorr(Big_PCA)+
+     ggtitle("Medium Cosolidation Correlation Plot")
+
+```
+
+
+```{r}
+Big_PCA_res <- prcomp(Big_PCA, scale. = TRUE)
+
+
+
+autoplot(Big_PCA_res, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=4)+
+       ggtitle("Medium PCA Plot")
+
+```
+
+
+```{r}
+# Making Big_PCA into a matrix
+Big_PCA_corl <- round(cor(Big_PCA),2)
+```
+
+```{r}
+# Filtering out Big_PCA to only include greater then or lesser then values
+Big_PCA_corl_filterd <- Big_PCA_corl
+
+x<- 0.65
+
+Big_PCA_corl_filterd[Big_PCA_corl_filterd < x & Big_PCA_corl_filterd > -x] <- ""
+```
+
+
+```{r}
+# Saving Big_PCA-Corl_filter as an excel file
+write.csv(Big_PCA_corl_filterd, "Big_PCA_corl_filterd_updatedSept2022_no_percentage_medium_consolidation.csv")
+```
+
+
+
+
+
+
+
+# ```{r}
+# 
+# Temperature...C. <-data_for_pca[1]
+# # Conductivity..S.m.<-data_for_pca[2]
+# Pressure..dbar.<-data_for_pca[3]
+# Fluorescence..mg.m.<-data_for_pca[4]
+# Salinity<-data_for_pca[5]
+# # Depth..m.<-data_for_pca[6]
+# Density..kg.m.<-data_for_pca[7]
+# Chlorophyll..mg.m.<-data_for_pca[8]
+# Phaeopigment..mg.m.<-data_for_pca[9]
+# Phosphate..µmol.L.<-data_for_pca[10]
+# Silicate..µmol.L.<-data_for_pca[11]
+# # Nitrite.and.Nitrate..µmol.L.<-data_for_pca[12]
+# Primary.Prod...mg.m.day.<-data_for_pca[13]
+# Prim.Prod.STD..mg.m.day.<-data_for_pca[14]
+# 
+# ```
+
+
+
+removing Pressure, Depth, and the Standard deviation of the Primary production
+
+```{r}
+
+Temperature...C. <-data_for_pca[1]
+Conductivity..S.m.<-data_for_pca[2]
+# Pressure..dbar.<-data_for_pca[]
+Fluorescence..mg.m.<-data_for_pca[3]
+Salinity<-data_for_pca[4]
+# Depth..m.<-data_for_pca[]
+Density..kg.m.<-data_for_pca[5]
+Chlorophyll..mg.m.<-data_for_pca[6]
+Phaeopigment..mg.m.<-data_for_pca[7]
+Phosphate..µmol.L.<-data_for_pca[8]
+Silicate..µmol.L.<-data_for_pca[9]
+Nitrite.and.Nitrate..µmol.L.<-data_for_pca[10]
+Primary.Prod...mg.m.day.<-data_for_pca[11]
+# Prim.Prod.STD..mg.m.day.<-data_for_pca[]
+
+```
+
+
+
+
+```{r}
+# I WILL NEED TO REMAKE THIS WITH THE COROLATIONS I END UP CHOOSING
+
+
+# WILL CHANGE
+# Large_corl <- do.call("cbind", list(Temperature...C.,Conductivity..S.m., Salinity,"Density..kg.m³.", "Primary.Prod...mg.m³.day.", Cryptophyceae.Cryptomonadales.Geminigera))
+```
+
+
+
+
+
+```{r}
+Group_1 <- do.call("cbind", list(data_for_pca, Archaeplastida.Chlorophyta.and.otherArchaeplastida, Stramenopiles.Diatomea.ME_Euk_FW10, Stramenopiles.Dictyochophyceae.Pedinellales))
+```
+
+
+```{r}
+Group_1_PCA <- prcomp(Group_1, scale. = TRUE)
+
+autoplot(Group_1_PCA, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=6)+
+  ggtitle("Medium Group 1 PCA Plot")
+
+```
+
+```{r}
+Group_2 <- do.call("cbind", list(data_for_pca, Excavata.Discoba.Jakobida, Haptophyta.non_Phaeocystis, Eukaryota_other))
+```
+
+
+```{r}
+Group_2_PCA <- prcomp(Group_2, scale. = TRUE)
+
+autoplot(Group_2_PCA, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=6)+
+  ggtitle("Medium Group 2 PCA Plot")
+
+```
+
+
+
+
+```{r}
+Group_3 <- do.call("cbind", list(data_for_pca, Picozoa.Picomonadida))
+```
+
+
+```{r}
+Group_3_PCA <- prcomp(Group_3, scale. = TRUE)
+
+autoplot(Group_3_PCA, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=6)+
+  ggtitle("Medium Group 3 PCA Plot")
+
+```
+
+
+
+
+```{r}
+Group_4 <- do.call("cbind", list(data_for_pca, Rhizaria.Cercozoa, Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae, Stramenopiles.MAST_2.and.MAST_3, Stramenopiles.Ochrophyta.other))
+```
+
+
+```{r}
+Group_4_PCA <- prcomp(Group_4, scale. = TRUE)
+
+autoplot(Group_4_PCA, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=6)+
+  ggtitle("Medium Group 4 PCA Plot")
+
+```
+
+
+
+
+
+

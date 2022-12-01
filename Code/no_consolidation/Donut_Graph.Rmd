@@ -1,0 +1,242 @@
+---
+title: "Donut_Graphs"
+author: "Idan Siman-Tov"
+date: '2022-05-13'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+library(ggpubr)
+library(ggrepel)
+library(webr)
+```
+
+
+```{r}
+# This is using both 18s and metagenome databases, thats probably wrong
+Metagenome_percent_Seasonal <- read.xlsx("..//..//Taxa_Data//Metagenome_percent_Seasonal.xlsx", sheetIndex=1, header= TRUE)
+```
+
+
+
+```{r}
+# I'm overwriting the previous df an instead using data that is a sum of daily percentages as apposed to combined counts that then are turned into percentages. This means that if I look at 2 days the total percentage will be 200%. This is also using both 18s and metagenome databases, thats probably wrong
+Metagenome_percent_Seasonal <- read.xlsx("..//..//Taxa_Data//Sum_of_percent_Donut.xlsx", sheetIndex=1, header= TRUE)
+```
+
+
+
+
+```{r}
+PieDonut(Metagenome_percent_Seasonal, aes(Taxa, count= Early_Summer_2012 ),
+         ratioByGroup = FALSE, labelposition =1, pieLabelSize = 3)
+
+```
+
+
+
+```{r}
+Metagenome <- read.xlsx("..//..//18s_Metagnome//18s_andMetagenome_taxaCounts_updatedAug21.xlsx", sheetIndex=1, header= FALSE)
+```
+
+
+```{r}
+# converting dates to readable dates
+Metagenome[2,5:25]<-as.character(openxlsx::convertToDate(Metagenome[2,5:25]))
+```
+
+
+```{r}
+# Creating a df of dates and of taxa+counts
+Metagenome_Taxa_Dates <- Metagenome[2,4:25]
+Metagenome_Taxa_counts<- Metagenome[5:34,4:25]
+```
+
+
+```{r}
+# Turing all the counts into double data type
+Metagenome_Taxa_counts_double<-lapply(Metagenome_Taxa_counts[,2:ncol(Metagenome_Taxa_counts)], as.numeric)
+
+# making it a data frame
+Metagenome_Dates_Counts<-as.data.frame(Metagenome_Taxa_counts_double,check.names=FALSE)
+```
+
+
+```{r}
+# Adding dates as header
+colnames(Metagenome_Dates_Counts)<-c(unlist(Metagenome_Taxa_Dates[2:ncol(Metagenome_Taxa_Dates)]))
+```
+
+
+```{r}
+# Averaging columns with the same header name
+# Metagenome_average_counts<-as.data.frame(t(apply(Metagenome_Dates_Counts,1, function(x) tapply(x,colnames(Metagenome_Dates_Counts),mean))))
+
+
+# in the case that I am not averaging duplicate days
+Metagenome_average_counts<- Metagenome_Dates_Counts
+# renaming the duplicates
+names(Metagenome_average_counts)[1] <- "2012-11-27.metagenome"
+names(Metagenome_average_counts)[6] <- "2013-02-08.metagenome"
+
+# adding more metagenome tags to help identify differences
+# names(Metagenome_average_counts)[1] <- "2012-11-27.metagenome"
+names(Metagenome_average_counts)[3] <- "2012-11-30.metagenome"
+names(Metagenome_average_counts)[4] <- "2012-12-10.metagenome"
+names(Metagenome_average_counts)[5] <- "2012-12-17.metagenome"
+# names(Metagenome_average_counts)[6] <- "2013-02-08.metagenome"
+names(Metagenome_average_counts)[8] <- "2013-02-15.metagenome"
+
+
+```
+
+
+```{r}
+# Adding Taxa
+Metagenome_average_counts$Taxa<-c(unlist(Metagenome_Taxa_counts[1]))
+
+Metagenome_average_counts <- Metagenome_average_counts %>%
+  select(Taxa, everything())
+```
+
+
+
+```{r}
+# removing the taxa discussed 
+newdata <- Metagenome_average_counts[ !(Metagenome_average_counts$Taxa %in% c("Opisthokonta.Holozoa","Eukaryota;other","Opisthokonta.otherOpisthokonta")), ]
+
+# reorders the numbers
+newdata<- slice(newdata)
+```
+
+
+```{r}
+# overwriting the Metagenome_average_counts to uninclude taxa discussed
+Metagenome_average_counts<-newdata
+```
+
+
+
+
+
+```{r}
+# Using a pipe function to manipulate data 
+Stacked_counts <- Metagenome_average_counts%>%
+  # using a mutate function to add a summer stage based off of month data was collected
+  mutate(
+    Broad_Category = if_else(str_detect(Taxa, "Diatomea"), "Diatomea", if_else(str_detect(Taxa, "Stramenopiles") , "Stramenopiles", "Other")),
+  )
+
+```
+
+
+
+
+```{r}
+# Using a pipe function to manipulate data 
+Stacked_counts_Seasanol <- Metagenome_percent_Seasonal%>%
+  # using a mutate function to add a summer stage based off of month data was collected
+  mutate(
+    Broad_Category = if_else(str_detect(Taxa, "Diatomea"), "Diatomea", if_else(str_detect(Taxa, "Stramenopiles") , "Stramenopiles", "Other")),
+  )
+
+```
+
+
+
+
+
+```{r}
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Early_Summer_2012),
+         ratioByGroup = FALSE, showPieName = FALSE, donutLabelSize=5, pieLabelSize=5, title="Early_Summer_2012")
+
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Mid_Summer_2012),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Mid_Summer_2012")
+
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Late_Summer_2013),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Late_Summer_2013")
+
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Mid_Summer_2013_2014),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Mid_Summer_2013_2014")
+
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Late_Summer_2014),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Late_Summer_2014")
+
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Mid_Summer_2014_2015),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Mid_Summer_2014_2015")
+
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Late_Summer_2015),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Late_Summer_2015")
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Trip_1),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Trip_1")
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Trip_2),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Trip_2")
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Trip_3),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Trip_3")
+
+
+```
+
+
+
+
+time course
+```{r}
+
+ ggplot(Metagenome_average_counts, aes(x=0, y=Taxa, group=Taxa, color=Taxa)) +
+    geom_line() 
+
+
+```
+
+
+
+```{r}
+library(ggplot2)
+library(babynames) # provide the dataset: a dataframe called babynames
+library(dplyr)
+library(hrbrthemes)
+library(viridis)
+
+# Keep only 3 names
+don <- babynames %>% 
+  filter(name %in% c("Ashley", "Patricia", "Helen")) %>%
+  filter(sex=="F")
+  
+# Plot
+don %>%
+  ggplot( aes(x=year, y=n, group=name, color=name)) +
+    geom_line() +
+    scale_color_viridis(discrete = TRUE) +
+    ggtitle("Popularity of American names in the previous 30 years") +
+    theme_ipsum() +
+    ylab("Number of babies born")
+```
+
+
+
+
+
+

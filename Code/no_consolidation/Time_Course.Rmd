@@ -1,0 +1,488 @@
+---
+title: "Time Course"
+author: "Idan Siman-Tov"
+date: '2022-06-01'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+
+
+
+source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//no_consolidation_functions//data_for_pca_formating.R")
+source("..//..//Functions//no_consolidation_functions//metagenome_taxa_removed.R")
+
+# source("..//..//Functions//no_consolidation_functions//Taxa_DF.R")
+```
+
+
+```{r}
+data_for_pca<-data_for_pca()
+```
+
+
+```{r}
+Metagenome <- read.xlsx("..//..//18s_Metagnome//18s_andMetagenome_taxaCounts_updatedAug21.xlsx", sheetIndex=1, header= FALSE)
+```
+
+
+```{r}
+# converting dates to readable dates
+Metagenome[2,5:25]<-as.character(openxlsx::convertToDate(Metagenome[2,5:25]))
+```
+
+
+```{r}
+# Creating a df of dates and of taxa+counts
+Metagenome_Taxa_Dates <- Metagenome[2,4:25]
+Metagenome_Taxa_counts<- Metagenome[5:34,4:25]
+```
+
+
+```{r}
+# Turing all the counts into double data type
+Metagenome_Taxa_counts_double<-lapply(Metagenome_Taxa_counts[,2:ncol(Metagenome_Taxa_counts)], as.numeric)
+
+# making it a data frame
+Metagenome_Dates_Counts<-as.data.frame(Metagenome_Taxa_counts_double,check.names=FALSE)
+```
+
+
+```{r}
+# Adding dates as header
+colnames(Metagenome_Dates_Counts)<-c(unlist(Metagenome_Taxa_Dates[2:ncol(Metagenome_Taxa_Dates)]))
+```
+
+
+```{r}
+
+# in the case that I am not averaging duplicate days
+Metagenome_average_counts<- Metagenome_Dates_Counts
+# renaming the duplicates
+names(Metagenome_average_counts)[1] <- "2012-11-27.metagenome"
+names(Metagenome_average_counts)[6] <- "2013-02-08.metagenome"
+
+# adding more metagenome tags to help identify differences
+# names(Metagenome_average_counts)[1] <- "2012-11-27.metagenome"
+names(Metagenome_average_counts)[3] <- "2012-11-30.metagenome"
+names(Metagenome_average_counts)[4] <- "2012-12-10.metagenome"
+names(Metagenome_average_counts)[5] <- "2012-12-17.metagenome"
+# names(Metagenome_average_counts)[6] <- "2013-02-08.metagenome"
+names(Metagenome_average_counts)[8] <- "2013-02-15.metagenome"
+
+
+```
+
+
+```{r}
+# Adding Taxa
+Metagenome_average_counts$Taxa<-c(unlist(Metagenome_Taxa_counts[1]))
+
+Metagenome_average_counts <- Metagenome_average_counts %>%
+  select(Taxa, everything())
+```
+
+
+
+```{r}
+# removing the taxa discussed 
+newdata <- Metagenome_average_counts[ !(Metagenome_average_counts$Taxa %in% c("Opisthokonta.Holozoa","Eukaryota;other","Opisthokonta.otherOpisthokonta")), ]
+
+# reorders the numbers
+newdata<- slice(newdata)
+```
+
+
+```{r}
+# overwriting the Metagenome_average_counts to uninclude taxa discussed
+Metagenome_average_counts<-newdata
+```
+
+
+
+
+
+
+
+
+
+
+
+
+Time Course
+
+
+```{r}
+# From  " 18s_metagenome_analysis" R file so its missing some data frames 
+
+Time_Course_Data<-setNames(melt(Metagenome_average_counts), c('Taxa', 'Date', 'Counts'))
+
+```
+
+
+```{r}
+# From  " 18s_metagenome_analysis" R file so its missing some data frames 
+
+Metagenome_Graph_dates_log<- Metagenome_Graph_data
+
+Metagenome_Graph_dates_log$Counts<-log10(Metagenome_Graph_dates_log$Counts)
+
+
+Metagenome_Graph_counts_with_avg_Diatomea_log<- Metagenome_Graph_counts_with_avg_Diatomea
+
+Metagenome_Graph_counts_with_avg_Diatomea_log$Counts<-log10(Metagenome_Graph_counts_with_avg_Diatomea_log$Counts)
+
+
+Metagenome_Graph_counts_with_avg_Stramenopile_log<- Metagenome_Graph_counts_with_avg_Stramenopile
+
+Metagenome_Graph_counts_with_avg_Stramenopile_log$Counts<-log10(Metagenome_Graph_counts_with_avg_Stramenopile_log$Counts)
+
+
+```
+
+
+```{r}
+# From  " 18s_metagenome_analysis" R file so its missing some data frames 
+
+ ggplot(Metagenome_Graph_dates_log, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line() +
+    ggtitle("Metagenome_Graph_datas_log") +
+    theme(axis.text = element_text(angle = -45))
+
+
+
+ ggplot(Metagenome_Graph_counts_with_avg_Diatomea, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line() +
+    ggtitle("Metagenome_Graph_counts_with_avg_Diatomea") +
+    theme(axis.text = element_text(angle = -45))
+
+ 
+ 
+ 
+ ggplot(Metagenome_Graph_counts_with_avg_Stramenopile, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line() +
+    ggtitle("Metagenome_Graph_counts_with_avg_Stramenopile") +
+    theme(axis.text = element_text(angle = -45))
+
+ 
+ 
+ 
+ ggplot(Metagenome_Graph_counts_with_avg_Diatomea_log, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line() +
+    ggtitle("Metagenome_Graph_counts_with_avg_Diatomea_log") +
+    theme(axis.text = element_text(angle = -45))
+ 
+ 
+ 
+  ggplot(Metagenome_Graph_counts_with_avg_Stramenopile_log, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line() +
+    ggtitle("Metagenome_Graph_counts_with_avg_Stramenopile_log") +
+    theme(axis.text = element_text(angle = -45))
+ 
+ 
+```
+
+
+
+
+
+```{r}
+# NOTICE YOU MAY NEED TO RUN THIS INDEPENDENTLY
+
+
+
+# Filtering out the Largely correlated species that I found and turning their counts into log base 10 to graph
+# I don't think that percentage is a good stat to use because there could be an unrelated increase in one species that is not correlated which would effect the stat graphed 
+
+Large_Corl_Time_Course_Data <- Metagenome_average_counts %>% filter(str_detect(Taxa, "Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.otherDiatomea|Stramenopiles.Diatomea.Bacillariophytina|Rhizaria.otherRhizaria|Stramenopiles.Diatomea.Coscinodiscophytina|Picozoa.otherPicozoa"))
+
+
+Large_Corl_Time_Course_Data_Mean<- Metagenome_average_counts %>% filter(str_detect(Taxa, "Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina"))
+
+Large_Corl_Time_Course_Data<- rbind(Large_Corl_Time_Course_Data ,cbind(data.frame(Taxa= "Mean"), Large_Corl_Time_Course_Data_Mean %>% summarise_if(is.numeric, mean)))
+
+
+# Large_Corl_Time_Course_Data<- rbind(Large_Corl_Time_Course_Data ,cbind(data.frame(Taxa= "Phosphate"), data_for_pca %>% filter(str_detect(data_for_pca, "Phosphate..µmol.L."))))
+```
+
+
+```{r}
+Large_Corl_Time_Course_Data <- setNames(melt(Large_Corl_Time_Course_Data), c('Taxa', 'Date', 'Counts'))
+  
+Large_Corl_Time_Course_Data$Counts <-log10(Large_Corl_Time_Course_Data$Counts)
+```
+
+
+
+
+```{r}
+
+# Adding a large Mean of "Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina" to help show their correlation
+
+ggplot(Large_Corl_Time_Course_Data, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+  geom_line(aes(size = Taxa)) +
+  # geom_line(data_for_pca,aes(y=2)) +
+  ggtitle("Large_Corl_Time_Course_Data") +
+  theme(axis.text = element_text(angle = -45)) +
+  # Adds custome size to mean but ass a new key on the right
+  scale_size_manual(values = c(Archaeplastida.Chlorophyta = 1, Archaeplastida.otherArchaeplastida=1, Stramenopiles.Diatomea.otherDiatomea=1, Stramenopiles.Diatomea.Bacillariophytina=1, Rhizaria.otherRhizaria=1, Stramenopiles.Diatomea.Coscinodiscophytina=1, Picozoa.otherPicozoa=1, Mean=3))
+
+```
+
+
+
+
+
+
+
+
+
+```{r}
+# Filtering out the Largely correlated species that I found and turning their counts into log base 10 to graph
+# I don't think that percentage is a good stat to use because there could be an unrelated increase in one species that is not correlated which would effect the stat graphed 
+
+Large_Corl_Time_Course_Data <- Metagenome_average_counts %>% filter(str_detect(Taxa, "Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.otherDiatomea|Stramenopiles.Diatomea.Bacillariophytina|Rhizaria.otherRhizaria|Stramenopiles.Diatomea.Coscinodiscophytina|Picozoa.otherPicozoa"))
+
+
+Large_Corl_Time_Course_Data_Mean<- Metagenome_average_counts %>% filter(str_detect(Taxa, "Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina"))
+
+Large_Corl_Time_Course_Data<- rbind(Large_Corl_Time_Course_Data ,cbind(data.frame(Taxa= "Mean"), Large_Corl_Time_Course_Data_Mean %>% summarise_if(is.numeric, mean)))
+
+# yo <- !names(Large_Corl_Time_Course_Data) %in% c("2012-11-27.metagenome" , "`2012-11-30.metagenome`" , "`2012-12-10.metagenome`", "`2012-12-17.metagenome`" , "`2013-02-08.metagenome`")
+
+# Large_Corl_Time_Course_Data <- Large_Corl_Time_Course_Data[ , ! names(Large_Corl_Time_Course_Data) %in% c("2012-11-27.metagenome" , "2012-11-30.metagenome" , "2012-12-10.metagenome", "2012-12-17.metagenome" , "2013-02-08.metagenome", "2013-02-15.metagenome")]
+
+
+yes <- data_for_pca$Phosphate..µmol.L.
+
+Large_Corl_Time_Course_Data[nrow(Large_Corl_Time_Course_Data) + 1,] <- yes
+
+# Large_Corl_Time_Course_Data<- rbind(Large_Corl_Time_Course_Data ,cbind(data.frame(Taxa= "Phosphate"), t(yes)))
+# # 
+# 
+# 
+# Large_Corl_Time_Course_Data <- setNames(melt(Large_Corl_Time_Course_Data), c('Taxa', 'Date', 'Counts'))
+#   
+# Large_Corl_Time_Course_Data$Counts <-log10(Large_Corl_Time_Course_Data$Counts)
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
+source("My_Functions.R")
+
+```
+
+
+
+
+Time course with percentages
+
+```{r}
+Metagenome1 <- read.xlsx("..//..//Taxa_Data//Metagenome_percent_counts.xlsx", sheetIndex=1, header= FALSE)
+
+Metagenome1 <- Metagenome1[2:28,2:21]
+Metagenome2<-Metagenome1[1]
+```
+
+
+
+# ```{r}
+# df_to_double<- function(x){
+#   a<-lapply(Metagenome1[,2:ncol(x)], as.numeric)
+#   return(as.data.frame(a,check.names=FALSE))
+# }
+# ```
+# 
+# 
+# 
+# ```{r}
+# # Turing all the counts into double data type
+# a<-lapply(Metagenome1[,2:ncol(Metagenome1)], as.numeric)
+# 
+# # making it a data frame
+# Metagenome4<-as.data.frame(a,check.names=FALSE)
+# ```
+
+
+```{r}
+Metagenome20<-df_to_double(Metagenome1)
+```
+
+
+
+```{r}
+Metagenome1<-cbind(Metagenome2,Metagenome1)
+Metagenome1<- slice(Metagenome1)
+```
+
+
+
+```{r}
+# adding more metagenome tags to help identify differences
+
+names(Metagenome1)[1] <- as.character("Taxa")
+names(Metagenome1)[2] <- as.character("2012-11-27")
+names(Metagenome1)[3] <- as.character("2012-11-30.metagenome")
+names(Metagenome1)[4] <- as.character("2012-12-10.metagenome")
+names(Metagenome1)[5] <- as.character("2012-12-17.metagenome")
+names(Metagenome1)[6] <- as.character("08-02-2013")
+names(Metagenome1)[7] <- as.character("2013-02-15.metagenome")
+names(Metagenome1)[8] <- as.character("27-12-2013")
+names(Metagenome1)[9] <- as.character("23-01-2014")
+names(Metagenome1)[10] <- as.character("03-02-2014")
+names(Metagenome1)[11] <- as.character("10-02-2014")
+names(Metagenome1)[12] <- as.character("28-02-2014")
+names(Metagenome1)[13] <- as.character("04-03-2014")
+names(Metagenome1)[14] <- as.character("01-12-2014")
+names(Metagenome1)[15] <- as.character("11-12-2014")
+names(Metagenome1)[16] <- as.character("12-01-2015")
+names(Metagenome1)[17] <- as.character("19-01-2015")
+names(Metagenome1)[18] <- as.character("09-02-2015")
+names(Metagenome1)[19] <- as.character("23-02-2015")
+names(Metagenome1)[20] <- as.character("09-03-2015")
+
+
+# reorders the numbers
+Metagenome1<- slice(Metagenome1)
+
+```
+
+```{r}
+Large_Corl_Time_Course_Data1 <- Metagenome1 %>% filter(str_detect(Taxa, "Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.otherDiatomea|Stramenopiles.Diatomea.Bacillariophytina|Rhizaria.otherRhizaria|Stramenopiles.Diatomea.Coscinodiscophytina|Picozoa.otherPicozoa"))
+```
+
+
+```{r}
+# Turing the df into a table for ggplot of percentages
+
+Metagenome1_Time_Course_Data <- setNames(melt(Large_Corl_Time_Course_Data1), c('Taxa', 'Date', 'Counts'))
+
+```
+
+```{r}
+# converting to log
+Metagenome1_Time_Course_Data$Counts<-log10(Metagenome1_Time_Course_Data$Counts)
+
+```
+
+
+
+
+```{r}
+ggplot(Metagenome1_Time_Course_Data, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+  # geom_line(aes(size = Taxa)) +
+  geom_line(aes(size=2)) +
+  # geom_line(data_for_pca,aes(y=2)) +
+  ggtitle("Metagenome1_Time_Course_Data") +
+  theme(axis.text = element_text(angle = -45))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+yo<-Percentage_Function(Large_Corl_Time_Course_Data1)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+metagenome_taxa_removed
+
+
+
+
+```{r}
+source("data_for_pca_formating.R")
+
+```
+
+
+
+
+
+
+
+```{r}
+source("metagenome_taxa_removed.R")
+
+```
+
+
+
+```{r}
+brabrarba<-metagenome_taxa_removed()
+```
+
+
+
+
+
+```{r}
+perc<-Percentage_Function(brabrarba)
+```
+
+
+
+```{r}
+braberry <- setNames(melt(perc), c('Taxa', 'Date', 'Counts'))
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

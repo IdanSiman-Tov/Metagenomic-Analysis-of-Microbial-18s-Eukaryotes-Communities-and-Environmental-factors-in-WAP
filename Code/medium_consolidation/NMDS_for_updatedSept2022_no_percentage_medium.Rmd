@@ -1,0 +1,266 @@
+---
+title: "NMDS"
+author: "Idan Siman-Tov"
+date: '2022-06-13'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+library(vegan)
+library(ggvegan)
+
+
+
+
+source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//medium_consolidation_functions//data_for_pca_formating_updatedSept2022_no_percentage_medium_consolidation.R")
+source("..//..//Functions//medium_consolidation_functions//metagenome_taxa_removed_updatedSept2022_no_percentage_medium_consolidation.R")
+
+source("..//..//Functions//medium_consolidation_functions//Taxa_DF_updatedSept2022_no_percentage_medium_consolidation.R")
+
+```
+
+
+
+```{r}
+data_for_pca<-data_for_pca()
+```
+
+
+```{r}
+
+Temperature...C. <-data_for_pca[1]
+Conductivity..S.m.<-data_for_pca[2]
+Pressure..dbar.<-data_for_pca[3]
+Fluorescence..mg.m.<-data_for_pca[4]
+Salinity<-data_for_pca[5]
+Depth..m.<-data_for_pca[6]
+Density..kg.m.<-data_for_pca[7]
+Chlorophyll..mg.m.<-data_for_pca[8]
+Phaeopigment..mg.m.<-data_for_pca[9]
+Phosphate..µmol.L.<-data_for_pca[10]
+Silicate..µmol.L.<-data_for_pca[11]
+Nitrite.and.Nitrate..µmol.L.<-data_for_pca[12]
+Primary.Prod...mg.m.day.<-data_for_pca[13]
+Prim.Prod.STD..mg.m.day.<-data_for_pca[14]
+
+```
+
+
+
+
+```{r}
+
+Alveolata.Dinoflagellata<-Alveolata.Dinoflagellata()
+
+Archaeplastida.Chlorophyta.and.otherArchaeplastida<- Archaeplastida.Chlorophyta.and.otherArchaeplastida()
+
+Excavata.Discoba.Jakobida<- Excavata.Discoba.Jakobida()
+
+Haptophyta.non_Phaeocystis<-Haptophyta.non_Phaeocystis()
+
+Haptophyta.Phaeocystis<-Haptophyta.Phaeocystis()
+
+Picozoa.Picomonadida<-Picozoa.Picomonadida()
+
+Rhizaria.Cercozoa<- Rhizaria.Cercozoa()
+
+Stramenopiles.Diatomea.ME_Euk_FW10<-Stramenopiles.Diatomea.ME_Euk_FW10()
+
+Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae<-Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae()
+
+Stramenopiles.Dictyochophyceae.Pedinellales<-Stramenopiles.Dictyochophyceae.Pedinellales()
+
+Stramenopiles.MAST_2.and.MAST_3<-Stramenopiles.MAST_2.and.MAST_3()
+
+Stramenopiles.Ochrophyta.other<-Stramenopiles.Ochrophyta.other()
+
+Stramenopiles.Phaeophyceae<-Stramenopiles.Phaeophyceae()
+
+Eukaryota_other<-Eukaryota_other()
+
+Cryptophyceae.Geminigera.and.otherCryptophyceae<-Cryptophyceae.Geminigera.and.otherCryptophyceae()
+
+Stramenopiles.Diatomea.Bacillariophytina.and.Coscinodiscophytina.and.otherDiatomea<- Stramenopiles.Diatomea.Bacillariophytina.and.Coscinodiscophytina.and.otherDiatomea()
+
+SAR_unclassified.and.otherStramenopiles.and.otherAlveolata<-SAR_unclassified.and.otherStramenopiles.and.otherAlveolata()
+```
+
+
+
+
+
+
+```{r}
+# Changing the temp to kelvin because it cant have negative numbers
+data_for_pca$Temperature...C.<-data_for_pca$Temperature...C.+273.15
+names(data_for_pca)[1] <- "Temperature...K."
+```
+
+
+```{r}
+
+ Group_1<- do.call("cbind", list(data_for_pca, Archaeplastida.Chlorophyta.and.otherArchaeplastida, Stramenopiles.Diatomea.ME_Euk_FW10, Stramenopiles.Dictyochophyceae.Pedinellales))
+
+ Group_2<- do.call("cbind", list(data_for_pca, Excavata.Discoba.Jakobida, Haptophyta.non_Phaeocystis, Eukaryota_other))
+
+ Group_3<- do.call("cbind", list(data_for_pca, Rhizaria.Cercozoa, Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae, Stramenopiles.MAST_2.and.MAST_3, Stramenopiles.Ochrophyta.other))
+
+ Group_4<- do.call("cbind", list(data_for_pca, Picozoa.Picomonadida))
+
+
+```
+
+
+
+```{r}
+Date<-data.frame(
+    Date= c("2012-11-27","2013-02-08","2013-12-27","2014-01-23","2014-02-03","2014-02-10","2014-02-28","2014-03-04","2014-12-01","2014-12-11","2015-01-12","2015-01-19","2015-02-09","2015-02-23","2015-03-09"))
+```
+
+
+
+
+NMDS
+
+```{r}
+# Large_corl_NMDS<-Large_corl
+# # converting temperature to k because i got a warring about negative numbers
+# Large_corl_NMDS$Temperature...C.<-Large_corl_NMDS$Temperature...C.+273.15
+# names(Large_corl_NMDS)[1] <- "Temperature...K."
+```
+
+
+```{r}
+set.seed(1)
+# running the nmds calculations using default setting
+# NMDS <- metaMDS(Large_corl_NMDS, distance= "bray", k=2)
+NMDS_Group_1 <- metaMDS(Group_1, distance= "bray", k=2)
+NMDS_Group_2 <- metaMDS(Group_2, distance= "bray", k=2)
+NMDS_Group_3 <- metaMDS(Group_3, distance= "bray", k=2)
+NMDS_Group_4 <- metaMDS(Group_4, distance= "bray", k=2)
+
+
+```
+
+```{r}
+# running a shepherd plot. im not sure exactly but im pretty sure the results are good
+stressplot(NMDS_Group_1)
+stressplot(NMDS_Group_2)
+stressplot(NMDS_Group_3)
+stressplot(NMDS_Group_4)
+```
+
+
+
+```{r}
+plot(NMDS_Group_1, "sites")
+NMDS_Group_1_fit <- envfit(NMDS_Group_1, Group_1, permu=999)
+plot(NMDS_Group_1_fit, cex =1.5, main = title(main = "Medium Consolidatoin Group 1 NMDS"))
+
+
+
+plot(NMDS_Group_2, "sites")
+NMDS_Group_2_fit <- envfit(NMDS_Group_2, Group_2, permu=999)
+plot(NMDS_Group_2_fit, cex =1.5, main = title(main = "Medium Consolidatoin Group 2 NMDS"))
+
+
+plot(NMDS_Group_3, "sites")
+NMDS_Group_3_fit <- envfit(NMDS_Group_3, Group_3, permu=999)
+plot(NMDS_Group_3_fit, cex =1.5, main = title(main = "Medium Consolidatoin Group 3 NMDS"))
+
+
+plot(NMDS_Group_4, "sites")
+NMDS_Group_4_fit <- envfit(NMDS_Group_4, Group_4, permu=999)
+plot(NMDS_Group_4_fit, cex =1.5, main = title(main = "Medium Consolidatoin Group 4 NMDS"))
+
+```
+
+
+```{r}
+plot(NMDS_Group_1, shape=1)
+plot(NMDS_Group_2, shape=1)
+
+```
+
+```{r}
+plot(NMDS_Group_1, shape=1)
+```
+
+
+```{r}
+NMDS_Group_1$points
+```
+
+
+
+
+```{r}
+Large.hel<- decostand(Group_1, method = "hellinger")
+Large.hel<- subset(Large.hel, select = -c(`Fluorescence..mg.m³.`,`Phaeopigment..mg.m³.`))
+nmds1<-metaMDS(Large.hel, try=50, autotransform = F)
+```
+
+
+```{r}
+ordiplot(nmds1, type = "t", cex=2)
+```
+
+
+```{r}
+autoplot(nmds1)
+```
+
+```{r}
+fort<-fortify(nmds1)
+ggplot()+
+  geom_point(data=subset(fort,Score=="sites"),
+             mapping = aes(x=NMDS1, y=NMDS2),
+             colour="black",
+             alpha=0.5)
+  # geom_segment()
+
+```
+
+
+```{r}
+fort<-fortify(nmds1)
+ggplot()+
+  geom_point(data=subset(fort,Score=="sites"),
+             mapping = aes(x=NMDS1, y=NMDS2),
+             colour=Date$Date,
+             size=5)+
+  geom_text(data=subset(fort, Score=="species"),
+            mapping = aes(label=Label, x=NMDS1, y=NMDS2),
+            alpha=0)
+  # scale_color_discrete("Date")
+ordiplot(nmds1, type = "t", cex = 1)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

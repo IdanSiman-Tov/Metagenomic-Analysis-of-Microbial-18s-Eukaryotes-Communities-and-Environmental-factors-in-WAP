@@ -1,0 +1,264 @@
+---
+title: "18S_Correlation"
+author: "Idan Siman-Tov"
+date: '2022-03-26'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+library(vegan)
+
+
+source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//maximum_consolidation_functions//data_for_pca_formating_updatedSept2022_no_percentage_maximum_consolidation.R")
+source("..//..//Functions//maximum_consolidation_functions//metagenome_taxa_removed_updatedSept2022_no_percentage_maximum_consolidation.R")
+
+source("..//..//Functions//maximum_consolidation_functions//Taxa_DF_updatedSept2022_no_percentage_maximum_consolidation.R")
+
+```
+
+
+```{r}
+data_for_pca<-data_for_pca()
+```
+
+```{r}
+CTD_crop<-CTD_crop()
+```
+
+```{r}
+Metagenome_average_counts <-metagenome_taxa_removed()
+```
+
+
+
+
+
+```{r}
+
+Archaeplastida.Chlorophyta.and.otherArchaeplastida<- Archaeplastida.Chlorophyta.and.otherArchaeplastida()
+
+Excavata.Discoba.Jakobida<- Excavata.Discoba.Jakobida()
+
+Picozoa.Picomonadida<-Picozoa.Picomonadida()
+
+Stramenopiles.MAST_2.and.MAST_3<-Stramenopiles.MAST_2.and.MAST_3()
+
+Eukaryota_other<-Eukaryota_other()
+```
+
+```{r}
+Cryptophyceae.Geminigera.and.otherCryptophyceae<-Cryptophyceae.Geminigera.and.otherCryptophyceae()
+
+```
+
+```{r}
+Haptophyta.Phaeocystis.and.non_Phaeocystis<-Haptophyta.Phaeocystis.and.non_Phaeocystis()
+
+Alveolata.Dinoflagellata<-Alveolata.Dinoflagellata()
+
+Rhizaria.Cercozoa<-Rhizaria.Cercozoa()
+
+Stramenopiles.Diatomea.all<-Stramenopiles.Diatomea.all()
+
+Stramenopiles.Dictyochophyceae.all<-Stramenopiles.Dictyochophyceae.all()
+
+SAR_unclassified.and.otherStramenopiles.and.otherAlveolata.and.Ochrophyta.and.Phaeophyceae<-SAR_unclassified.and.otherStramenopiles.and.otherAlveolata.and.Ochrophyta.and.Phaeophyceae()
+```
+
+
+
+
+```{r}
+# WILL NEED TO EDIT
+Big_PCA <- do.call("cbind", list(data_for_pca, 
+Archaeplastida.Chlorophyta.and.otherArchaeplastida,
+
+Excavata.Discoba.Jakobida,
+
+Picozoa.Picomonadida,
+                                 
+Stramenopiles.MAST_2.and.MAST_3,
+
+Eukaryota_other,
+
+Cryptophyceae.Geminigera.and.otherCryptophyceae,
+
+Haptophyta.Phaeocystis.and.non_Phaeocystis,
+
+Alveolata.Dinoflagellata,
+
+Rhizaria.Cercozoa,
+
+Stramenopiles.Diatomea.all,
+
+Stramenopiles.Dictyochophyceae.all,
+
+SAR_unclassified.and.otherStramenopiles.and.otherAlveolata.and.Ochrophyta.and.Phaeophyceae
+
+
+))
+```
+
+
+
+```{r}
+# corrgram(Archaeplastida.Chlorophyta_PCA, order=TRUE, lower.panel=panel.shade, upper.panel=panel.cor, text.panel=panel.txt)
+```
+
+
+
+
+```{r}
+ggcorr(Big_PCA)+
+     ggtitle("Maximim Consolidation Correlation Plot")
+```
+
+
+```{r}
+Big_PCA_res <- prcomp(Big_PCA, scale. = TRUE)
+
+
+
+autoplot(Big_PCA_res, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=4)+
+     ggtitle("Maximum Consolidation PCA Plot")
+```
+
+
+```{r}
+# Making Big_PCA into a matrix
+Big_PCA_corl <- round(cor(Big_PCA),2)
+```
+
+```{r}
+# Filtering out Big_PCA to only include greater then or lesser then values
+Big_PCA_corl_filterd <- Big_PCA_corl
+
+x<- 0.65
+
+Big_PCA_corl_filterd[Big_PCA_corl_filterd < x & Big_PCA_corl_filterd > -x] <- ""
+```
+
+
+```{r}
+# Saving Big_PCA-Corl_filter as an excel file
+write.csv(Big_PCA_corl_filterd, "..//..//Generated_Tables//Big_PCA_corl_filterd_updatedSept2022_no_percentage_maximum_consolidation.csv")
+```
+
+
+
+
+
+
+
+```{r}
+
+Temperature...C. <-data_for_pca[1]
+Conductivity..S.m.<-data_for_pca[2]
+Pressure..dbar.<-data_for_pca[3]
+Fluorescence..mg.m.<-data_for_pca[4]
+Salinity<-data_for_pca[5]
+Depth..m.<-data_for_pca[6]
+Density..kg.m.<-data_for_pca[7]
+Chlorophyll..mg.m.<-data_for_pca[8]
+Phaeopigment..mg.m.<-data_for_pca[9]
+Phosphate..µmol.L.<-data_for_pca[10]
+Silicate..µmol.L.<-data_for_pca[11]
+Nitrite.and.Nitrate..µmol.L.<-data_for_pca[12]
+Primary.Prod...mg.m.day.<-data_for_pca[13]
+Prim.Prod.STD..mg.m.day.<-data_for_pca[14]
+
+```
+
+
+
+
+
+
+
+```{r}
+Group_1 <- do.call("cbind", list(data_for_pca, Archaeplastida.Chlorophyta.and.otherArchaeplastida, Stramenopiles.Dictyochophyceae.all))
+```
+
+```{r}
+
+Group_1_PCA <- prcomp(Group_1, scale. = TRUE)
+
+autoplot(Group_1_PCA, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=6)+
+  ggtitle("Maximum Group 1 PCA Plot")
+
+```
+
+
+
+
+
+```{r}
+Group_2 <- do.call("cbind", list(data_for_pca, Excavata.Discoba.Jakobida, Cryptophyceae.Geminigera.and.otherCryptophyceae, Stramenopiles.Diatomea.all, Eukaryota_other))
+```
+
+
+```{r}
+Group_2_PCA <- prcomp(Group_1, scale. = TRUE)
+
+autoplot(Group_2_PCA, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=6)+
+  ggtitle("Maximum Group 2 PCA Plot")
+
+```
+
+
+
+
+```{r}
+Group_3 <- do.call("cbind", list(data_for_pca, Picozoa.Picomonadida))
+```
+
+
+```{r}
+Group_3_PCA <- prcomp(Group_3, scale. = TRUE)
+
+autoplot(Group_3_PCA, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=6)+
+  ggtitle("Maximum Group 3 PCA Plot")
+
+```
+
+
+
+
+```{r}
+Group_4 <- do.call("cbind", list(data_for_pca, Rhizaria.Cercozoa))
+```
+
+
+```{r}
+Group_4_PCA <- prcomp(Group_4, scale. = TRUE)
+
+autoplot(Group_4_PCA, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=6)+
+  ggtitle("Maximum Group 4 PCA Plot")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+

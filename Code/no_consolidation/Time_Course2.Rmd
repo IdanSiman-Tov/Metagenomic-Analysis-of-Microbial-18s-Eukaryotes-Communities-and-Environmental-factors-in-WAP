@@ -1,0 +1,578 @@
+---
+title: "Time_Course2"
+author: "Idan Siman-Tov"
+date: '2022-06-11'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+
+
+
+source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//no_consolidation_functions//data_for_pca_formating.R")
+source("..//..//Functions//no_consolidation_functions//metagenome_taxa_removed.R")
+
+# source("..//..//Functions//no_consolidation_functions//Taxa_DF.R")
+
+```
+
+
+```{r}
+data_for_pca<-data_for_pca()
+metagenome_taxa<-metagenome_taxa_removed()
+```
+
+
+```{r}
+metagenome_taxa_percentage <-Percentage_Function(metagenome_taxa)
+```
+
+
+
+
+```{r}
+# Format the table for ggplot
+metagenome_taxa_count_time_course<-setNames(melt(metagenome_taxa), c('Taxa', 'Date', 'Counts'))
+metagenome_taxa_percentage_time_course<-setNames(melt(metagenome_taxa_percentage), c('Taxa', 'Date', 'Counts'))
+```
+
+
+
+
+```{r}
+# Convert numbers to log base 10 so that its easier to graph
+# Converting counts to logs
+metagenome_taxa_count_time_course_log<- metagenome_taxa_count_time_course
+metagenome_taxa_count_time_course_log$Counts<-log10(metagenome_taxa_count_time_course_log$Counts)
+
+
+# Converting percentages to logs
+metagenome_taxa_percentage_time_course_log<- metagenome_taxa_percentage_time_course
+metagenome_taxa_percentage_time_course_log$Counts<-log10(metagenome_taxa_percentage_time_course_log$Counts)
+
+```
+
+
+```{r}
+# Filtering to only include the "large correlated taxa" from counts
+Large_Corl_metagenome_taxa_count_time_course_log <- metagenome_taxa_count_time_course_log %>% filter(str_detect(Taxa, "Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.otherDiatomea|Stramenopiles.Diatomea.Bacillariophytina|Rhizaria.otherRhizaria|Stramenopiles.Diatomea.Coscinodiscophytina|Picozoa.otherPicozoa"))
+
+
+# Filtering to only include the "large correlated taxa" from percentages
+Large_Corl_metagenome_taxa_percentage_time_course_log <- metagenome_taxa_percentage_time_course_log %>% filter(str_detect(Taxa, "Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.otherDiatomea|Stramenopiles.Diatomea.Bacillariophytina|Rhizaria.otherRhizaria|Stramenopiles.Diatomea.Coscinodiscophytina|Picozoa.otherPicozoa"))
+```
+
+
+
+```{r}
+# Graphing the time course
+# Counts
+ ggplot(Large_Corl_metagenome_taxa_count_time_course_log, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("Large_Corl_metagenome_taxa_count_time_course_log") +
+    theme(axis.text = element_text(angle = -45))
+
+# Percent
+ ggplot(Large_Corl_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("Large_Corl_metagenome_taxa_percentage_time_course_log") +
+    theme(axis.text = element_text(angle = -45))
+
+
+```
+
+
+
+```{r}
+# Filtering to only include the "large correlated taxa" from counts additionally it filters out, Stramenopiles.Diatomea.otherDiatomea, Picozoa.otherPicozoa and Rhizaria.otherRhizaria
+Large_Corl_LARGE_metagenome_taxa_count_time_course_log <- metagenome_taxa_count_time_course_log %>% filter(str_detect(Taxa, "Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina"))
+
+
+# Filtering to only include the "large correlated taxa" from percentages additionally it filters out, Stramenopiles.Diatomea.otherDiatomea, Picozoa.otherPicozoa and Rhizaria.otherRhizaria
+Large_Corl_LARGE_metagenome_taxa_percentage_time_course_log <- metagenome_taxa_percentage_time_course_log %>% filter(str_detect(Taxa, "Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina"))
+```
+
+
+
+
+```{r}
+# Graphing the time course
+# Counts
+ ggplot(Large_Corl_LARGE_metagenome_taxa_count_time_course_log, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("Large_Corl_LARGE_metagenome_taxa_count_time_course_log") +
+    theme(axis.text = element_text(angle = -45))
+
+# Percent
+ ggplot(Large_Corl_LARGE_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("Large_Corl_LARGE_metagenome_taxa_percentage_time_course_log") +
+    theme(axis.text = element_text(angle = -45))
+
+
+```
+
+
+
+```{r}
+# removing all metagenome databases
+metagenome_taxa_percentage_18S<-subset(metagenome_taxa_percentage, select = -c(`2012-11-27.metagenome`, `2012-11-30.metagenome`, `2012-12-10.metagenome`, `2012-12-17.metagenome`,`2013-02-08.metagenome`,`2013-02-15.metagenome`))
+
+# taking only the strongly correlated
+metagenome_taxa_percentage_18S <- metagenome_taxa_percentage_18S %>% filter(str_detect(Taxa, "Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina"))
+
+```
+
+
+
+
+```{r}
+# formatting for ggplot
+metagenome_taxa_percentage_18S_time_course<-setNames(melt(metagenome_taxa_percentage_18S), c('Taxa', 'Date', 'Counts'))
+```
+
+
+```{r}
+metagenome_taxa_percentage_18S_time_course$Counts<-log10(metagenome_taxa_percentage_18S_time_course$Counts)
+```
+
+
+
+
+
+```{r}
+# Percent
+ ggplot(metagenome_taxa_percentage_18S_time_course, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("metagenome_taxa_percentage_18S_time_course") +
+    theme(axis.text = element_text(angle = -45))
+
+
+```
+
+
+
+
+
+```{r}
+# removing all metagenome databases
+metagenome_taxa_percentage_metagenome_database<-subset(metagenome_taxa_percentage, select = c(Taxa,`2012-11-27.metagenome`, `2012-11-30.metagenome`, `2012-12-10.metagenome`, `2012-12-17.metagenome`,`2013-02-08.metagenome`,`2013-02-15.metagenome`))
+
+# taking only the strongly correlated
+metagenome_taxa_percentage_metagenome_database <- metagenome_taxa_percentage_metagenome_database %>% filter(str_detect(Taxa, "Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina"))
+
+```
+
+
+
+
+```{r}
+# formating for ggplot
+metagenome_taxa_percentage_metagenome_database_time_course<-setNames(melt(metagenome_taxa_percentage_metagenome_database), c('Taxa', 'Date', 'Counts'))
+```
+
+
+```{r}
+metagenome_taxa_percentage_metagenome_database_time_course$Counts<-log10(metagenome_taxa_percentage_metagenome_database_time_course$Counts)
+```
+
+
+
+
+
+```{r}
+# Percent
+ ggplot(metagenome_taxa_percentage_metagenome_database_time_course, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    # geom_line(aes(x=Date, y=data_for_pca[2]), size =1.4) +
+    ggtitle("metagenome_taxa_percentage_metagenome_database_time_course") +
+    theme(axis.text = element_text(angle = -45))
+
+
+```
+
+
+
+
+
+
+```{r}
+Phosphate<-data.frame(
+    Date= c("yo","2012-11-27.metagenome","2012-11-27","2012-11-30.metagenome","2012-12-10.metagenome","2012-12-17.metagenome","2013-02-08.metagenome","2013-02-08","2013-02-15.metagenome","2013-12-27","2014-01-23","2014-02-03","2014-02-10","2014-02-28","2014-03-04","2014-12-01","2014-12-11","2015-01-12","2015-01-19","2015-02-09","2015-02-23","2015-03-09"),
+    Phosphate= c("Phosphate",1.15,1.15,0.04,0.06,1.666,1.502,1.502,1.641,2.107,0.995,0.809,1.376,0.909,1.274,1.195,1.734,1.36,1.226,1.636,1.453,1.242))
+```
+
+
+```{r}
+# Phosphate$Phosphate<-log10(Phosphate$Phosphate)
+```
+
+```{r}
+# Percent
+ ggplot(Large_Corl_LARGE_metagenome_taxa_percentage_time_course_log, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    geom_line(aes(y=3),size=1.4) +
+
+    ggtitle("Large_Corl_LARGE_metagenome_taxa_percentage_time_course_log") +
+    theme(axis.text = element_text(angle = -45))
+
+```
+
+
+
+```{r}
+tphosphate<-t(Phosphate)
+
+```
+
+
+
+```{r}
+Phosphate_time_course<- rbind(metagenome_taxa_percentage, tphosphate[2,])
+Phosphate_taxa_names<- Phosphate_time_course[1]
+
+```
+
+```{r}
+Phosphate_taxa_names
+```
+
+
+```{r}
+Phosphate_time_course<-df_to_double(Phosphate_time_course)
+Phosphate_time_course<-cbind(Phosphate_taxa_names,Phosphate_time_course)
+```
+
+
+```{r}
+Phosphate_time_course<-subset(Phosphate_time_course, select = -c(`2012-11-27.metagenome`, `2012-11-30.metagenome`, `2012-12-10.metagenome`, `2012-12-17.metagenome`,`2013-02-08.metagenome`,`2013-02-15.metagenome`))
+```
+
+
+
+```{r}
+Phosphate_time_course_melt <-setNames(melt(Phosphate_time_course), c('Taxa', 'Date', 'Counts'))
+```
+
+
+```{r}
+Phosphate_time_course_melt<- Phosphate_time_course_melt %>% filter(str_detect(Taxa, "Phosphate|Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina"))
+```
+
+
+
+```{r}
+
+Phosphate_time_course_melt_log<-Phosphate_time_course_melt
+
+Phosphate_time_course_melt_log$Counts<-log10(Phosphate_time_course_melt$Counts)
+
+```
+
+
+
+
+
+
+```{r}
+ ggplot(Phosphate_time_course_melt_log, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("Phosphate_time_course_percent_log") +
+    theme(axis.text = element_text(angle = -45))
+```
+
+```{r}
+Phosphate_melt<- setNames(melt(Phosphate[2:22,]), c('Date', 'Phospate'))
+```
+
+```{r}
+ ggplot(Phosphate_melt, aes(x=Date, y=Phospate, group=Phospate, color=1)) +
+    geom_line(size=1.4) +
+    ggtitle("Phosphate_melt") +
+    theme(axis.text = element_text(angle = -45))
+```
+```{r}
+Phosphate<-data.frame(
+    Date= c("2012-11-27.metagenome","2012-11-27","2012-11-30.metagenome","2012-12-10.metagenome","2012-12-17.metagenome","2013-02-08.metagenome","2013-02-08","2013-02-15.metagenome","2013-12-27","2014-01-23","2014-02-03","2014-02-10","2014-02-28","2014-03-04","2014-12-01","2014-12-11","2015-01-12","2015-01-19","2015-02-09","2015-02-23","2015-03-09"),
+    Phosphate= c(1.15,1.15,0.04,0.06,1.666,1.502,1.502,1.641,2.107,0.995,0.809,1.376,0.909,1.274,1.195,1.734,1.36,1.226,1.636,1.453,1.242))
+```
+
+
+
+```{r}
+Phosphate_melt<- setNames(melt(Phosphate[2:22,]), c('Date', 'Phospate'))
+
+ ggplot(Phosphate_melt, aes(x=Date, y=Phospate, color=1)) +
+    geom_line(size=1.4) +
+    ggtitle("Phosphate_melt") +
+    theme(axis.text = element_text(angle = -45))
+```
+
+
+
+
+
+```{r}
+# Phosphate<- c(1.15,1.15,0.04,0.06,1.666,1.502,1.502,1.641,2.107,0.995,0.809,1.376,0.909,1.274,1.195,1.734,1.36,1.226,1.636,1.453,1.242)
+
+t<- metagenome_taxa_percentage[2:ncol(metagenome_taxa_percentage),17]*20
+plot(x=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21), y=Phosphate$Phosphate, type = "o",col = "red", xlab = "day", ylab = "Phosphate")
+lines(t, type = "o", col="blue")
+
+```
+
+
+
+
+
+```{r}
+metagenome_taxa[2:ncol(metagenome_taxa),17]
+```
+
+
+
+
+
+GROUPINGS WITH ONLY 18S DATABASE
+
+
+
+
+
+Group 1
+```{r}
+# removing all metagenome databases
+metagenome_taxa_percentage_18S<-subset(metagenome_taxa_percentage, select = -c(`2012-11-27.metagenome`, `2012-11-30.metagenome`, `2012-12-10.metagenome`, `2012-12-17.metagenome`,`2013-02-08.metagenome`,`2013-02-15.metagenome`))
+
+#takingonlythestonglycorrolatied
+metagenome_taxa_percentage_18S_group1<-metagenome_taxa_percentage_18S%>%filter(str_detect(Taxa,"Archaeplastida.otherArchaeplastida|Stramenopiles.Diatomea.Bacillariophytina|Stramenopiles.Diatomea.Coscinodiscophytina|Stramenopiles.Diatomea.otherDiatomea|Stramenopiles.otherStramenopiles|Stramenopiles.Dictyochophyceae.Dictyochales|SAR_unclassified"))
+
+```
+
+```{r}
+# formating for ggplot
+metagenome_taxa_percentage_18S_time_cours_group1<-setNames(melt(metagenome_taxa_percentage_18S_group1), c('Taxa', 'Date', 'Counts'))
+```
+
+```{r}
+metagenome_taxa_percentage_18S_time_cours_group1$Counts<-log10(metagenome_taxa_percentage_18S_time_cours_group1$Counts)
+```
+
+```{r}
+# Percent
+ ggplot(metagenome_taxa_percentage_18S_time_cours_group1, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("metagenome_taxa_percentage_18S_time_cours_group1") +
+    theme(axis.text = element_text(angle = -45))
+
+
+```
+
+
+
+
+
+Group 2
+```{r}
+# removing all metagenome databases
+metagenome_taxa_percentage_18S<-subset(metagenome_taxa_percentage, select = -c(`2012-11-27.metagenome`, `2012-11-30.metagenome`, `2012-12-10.metagenome`, `2012-12-17.metagenome`,`2013-02-08.metagenome`,`2013-02-15.metagenome`))
+
+#takingonlythestonglycorrolatied
+metagenome_taxa_percentage_18S_group2<-metagenome_taxa_percentage_18S%>%filter(str_detect(Taxa,"Picozoa.Picomonadida|Cryptophyceae.Cryptomonadales.Geminigera|Rhizaria.Cercozoa"))
+
+```
+
+```{r}
+# formating for ggplot
+metagenome_taxa_percentage_18S_time_cours_group2<-setNames(melt(metagenome_taxa_percentage_18S_group2), c('Taxa', 'Date', 'Counts'))
+```
+
+```{r}
+metagenome_taxa_percentage_18S_time_cours_group2$Counts<-log10(metagenome_taxa_percentage_18S_time_cours_group2$Counts)
+```
+
+```{r}
+# Percent
+ ggplot(metagenome_taxa_percentage_18S_time_cours_group2, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("metagenome_taxa_percentage_18S_time_cours_group2") +
+    theme(axis.text = element_text(angle = -45))
+
+
+```
+
+
+
+
+
+
+
+Group 3
+```{r}
+# removing all metagenome databases
+metagenome_taxa_percentage_18S<-subset(metagenome_taxa_percentage, select = -c(`2012-11-27.metagenome`, `2012-11-30.metagenome`, `2012-12-10.metagenome`, `2012-12-17.metagenome`,`2013-02-08.metagenome`,`2013-02-15.metagenome`))
+
+#takingonlythestonglycorrolatied
+metagenome_taxa_percentage_18S_group3<-metagenome_taxa_percentage_18S%>%filter(str_detect(Taxa,"Picozoa.otherPicozoa|Archaeplastida.Chlorophyta|Archaeplastida.otherArchaeplastida|Rhizaria.otherRhizaria"))
+
+```
+
+```{r}
+# formating for ggplot
+metagenome_taxa_percentage_18S_time_cours_group3<-setNames(melt(metagenome_taxa_percentage_18S_group3), c('Taxa', 'Date', 'Counts'))
+```
+
+```{r}
+metagenome_taxa_percentage_18S_time_cours_group3$Counts<-log10(metagenome_taxa_percentage_18S_time_cours_group3$Counts)
+```
+
+```{r}
+# Percent
+ ggplot(metagenome_taxa_percentage_18S_time_cours_group3, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("metagenome_taxa_percentage_18S_time_cours_group3") +
+    theme(axis.text = element_text(angle = -45))
+
+
+```
+
+
+
+
+
+
+
+Picozoa.otherPicozoa  and   Rhizaria.otherRhizaria
+```{r}
+# removing all metagenome databases
+metagenome_taxa_percentage_18S<-subset(metagenome_taxa_percentage, select = -c(`2012-11-27.metagenome`, `2012-11-30.metagenome`, `2012-12-10.metagenome`, `2012-12-17.metagenome`,`2013-02-08.metagenome`,`2013-02-15.metagenome`))
+
+#takingonlythestonglycorrolatied
+metagenome_taxa_percentage_18S_group3<-metagenome_taxa_percentage_18S%>%filter(str_detect(Taxa,"Picozoa.otherPicozoa|Rhizaria.otherRhizaria"))
+
+```
+
+```{r}
+# formating for ggplot
+metagenome_taxa_percentage_18S_time_cours_group3<-setNames(melt(metagenome_taxa_percentage_18S_group3), c('Taxa', 'Date', 'Counts'))
+```
+
+```{r}
+metagenome_taxa_percentage_18S_time_cours_group3$Counts<-log10(metagenome_taxa_percentage_18S_time_cours_group3$Counts)
+```
+
+```{r}
+# Percent
+ ggplot(metagenome_taxa_percentage_18S_time_cours_group3, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("metagenome_taxa_percentage_18S_time_cours_group3") +
+    theme(axis.text = element_text(angle = -45))
+
+
+```
+
+
+
+
+
+
+
+
+independent group 1
+```{r}
+# removing all metagenome databases
+metagenome_taxa_percentage_18S<-subset(metagenome_taxa_percentage, select = -c(`2012-11-27.metagenome`, `2012-11-30.metagenome`, `2012-12-10.metagenome`, `2012-12-17.metagenome`,`2013-02-08.metagenome`,`2013-02-15.metagenome`))
+
+#takingonlythestonglycorrolatied
+metagenome_taxa_percentage_18S_independent_group_1<-metagenome_taxa_percentage_18S%>%filter(str_detect(Taxa,"Stramenopiles.MAST-3|Stramenopiles.Dictyochophyceae.Florenciellales"))
+
+```
+
+```{r}
+# formating for ggplot
+metagenome_taxa_percentage_18S_time_cours_independent_group_1<-setNames(melt(metagenome_taxa_percentage_18S_independent_group_1), c('Taxa', 'Date', 'Counts'))
+```
+
+```{r}
+metagenome_taxa_percentage_18S_time_cours_independent_group_1$Counts<-log10(metagenome_taxa_percentage_18S_time_cours_independent_group_1$Counts)
+```
+
+```{r}
+# Percent
+ ggplot(metagenome_taxa_percentage_18S_time_cours_independent_group_1, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("metagenome_taxa_percentage_18S_time_cours_independent_group_1") +
+    theme(axis.text = element_text(angle = -45))
+
+
+```
+
+
+
+
+
+
+
+
+
+independent group 2
+```{r}
+# removing all metagenome databases
+metagenome_taxa_percentage_18S<-subset(metagenome_taxa_percentage, select = -c(`2012-11-27.metagenome`, `2012-11-30.metagenome`, `2012-12-10.metagenome`, `2012-12-17.metagenome`,`2013-02-08.metagenome`,`2013-02-15.metagenome`))
+
+#takingonlythestonglycorrolatied
+metagenome_taxa_percentage_18S_independent_group_2<-metagenome_taxa_percentage_18S%>%filter(str_detect(Taxa,"Stramenopiles.Diatomea.ME-Euk-FW10|Stramenopiles.Dictyochophyceae.Pedinellales"))
+
+```
+
+```{r}
+# formating for ggplot
+metagenome_taxa_percentage_18S_independent_group_2<-setNames(melt(metagenome_taxa_percentage_18S_independent_group_2), c('Taxa', 'Date', 'Counts'))
+```
+
+```{r}
+metagenome_taxa_percentage_18S_independent_group_2$Counts<-log10(metagenome_taxa_percentage_18S_independent_group_2$Counts)
+```
+
+```{r}
+# Percent
+ ggplot(metagenome_taxa_percentage_18S_independent_group_2, aes(x=Date, y=Counts, group=Taxa, color=Taxa)) +
+    geom_line(size=1.4) +
+    ggtitle("metagenome_taxa_percentage_18S_independent_group_2") +
+    theme(axis.text = element_text(angle = -45))
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

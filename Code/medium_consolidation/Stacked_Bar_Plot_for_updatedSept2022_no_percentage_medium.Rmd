@@ -1,0 +1,253 @@
+---
+title: "18S_metagenome_analysis"
+author: "Idan Siman-Tov"
+date: '2022-03-22'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+```
+
+```{r}
+source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//medium_consolidation_functions//data_for_pca_formating_updatedSept2022_no_percentage_medium_consolidation.R")
+source("..//..//Functions//medium_consolidation_functions//metagenome_taxa_removed_updatedSept2022_no_percentage_medium_consolidation.R")
+
+source("..//..//Functions//medium_consolidation_functions//Taxa_DF_updatedSept2022_no_percentage_medium_consolidation.R")
+```
+
+
+```{r}
+Metagenome <- read.xlsx("..//..//18s_Metagnome//18s_andMetagenome_taxaCounts_updatedSept2022_no_percentage.xlsx", sheetIndex=4, header= FALSE)
+```
+
+
+
+
+```{r}
+Metagenome_average_counts <-metagenome_taxa_removed()
+```
+
+
+
+
+```{r}
+# Turing the df into a table for ggplot
+Metagenome_Graph_data<-setNames(melt(Metagenome_average_counts), c('Taxa', 'Date', 'Counts'))
+```
+
+```{r}
+# Stacked percentage bar graph of taxa
+ggplot(Metagenome_Graph_data, aes(fill=Taxa, y=Counts, x=Date)) + 
+  geom_bar(position="fill", stat="identity") +
+  # making outlines
+  geom_bar(position="fill", stat="identity", colour="black") +  
+  # angling the text 
+    theme(axis.text = element_text(angle = -45))+
+     ggtitle("Medium Cosolidation Bar Plot All Taxa")
+
+```
+
+
+```{r}
+# isolating the first 8 data points
+
+Metagenome_average_counts_database<- Metagenome_average_counts[1:8]
+
+# Turing the df into a table for ggplot
+Metagenome_Graph_data_database<-setNames(melt(Metagenome_average_counts_database), c('Taxa', 'Date', 'Counts'))
+
+
+# Stacked percentage bar graph of taxa of the first 8
+ggplot(Metagenome_Graph_data_database, aes(fill=Taxa, y=Counts, x=Date)) + 
+  geom_bar(position="fill", stat="identity") +
+  # making outlines
+  geom_bar(position="fill", stat="identity", colour="black") +  
+  # angling the text 
+    theme(axis.text = element_text(angle = -45))
+  
+```
+
+
+
+
+
+PIPING THE GROUPS TOGETHER
+
+
+
+```{r}
+# df with only the Stramenopiles
+Stramenopiles_stacked_counts <- Metagenome_average_counts %>% filter(grepl("Stramenopiles", Taxa))
+```
+
+
+```{r}
+# graphing the Stramenoplies
+
+# Turing the df into a table for ggplot
+Stramenopiles_Graph_stacked_counts<-setNames(melt(Stramenopiles_stacked_counts), c('Taxa', 'Date', 'Counts'))
+
+
+# Stacked percentage bar graph of taxa of the first 8
+ggplot(Stramenopiles_Graph_stacked_counts, aes(fill=Taxa, y=Counts, x=Date)) + 
+  geom_bar(position="fill", stat="identity") +
+  # making outlines
+  geom_bar(position="fill", stat="identity", colour="black") +  
+  # angling the text 
+    theme(axis.text = element_text(angle = -45))+
+   ggtitle("Medium Cosolidation Bar Plot Stramenopiles Taxa")
+```
+
+
+```{r}
+# df with only the Diatomea
+Diatomea_stacked_counts <- Metagenome_average_counts %>% filter(grepl("Diatomea", Taxa))
+```
+
+
+```{r}
+# graphing the Diatomea
+
+# Turing the df into a table for ggplot
+Diatomea_Graph_stacked_counts<-setNames(melt(Diatomea_stacked_counts), c('Taxa', 'Date', 'Counts'))
+
+
+# Stacked percentage bar graph of taxa of the first 8
+ggplot(Diatomea_Graph_stacked_counts, aes(fill=Taxa, y=Counts, x=Date)) + 
+  geom_bar(position="fill", stat="identity") +
+  # making outlines
+  geom_bar(position="fill", stat="identity", colour="black") +  
+  # angling the text 
+    theme(axis.text = element_text(angle = -45))+
+     ggtitle("Medium Cosolidation Bar Plot Diatomea Taxa")
+
+```
+
+
+
+
+```{r}
+# filtering out the Diatomea
+Without_Diatomea_counts <- Metagenome_average_counts %>% filter(!str_detect(Taxa, "Diatomea"))
+```
+
+
+
+```{r}
+# averaging the Diatomea_stacked_counts df and combing it with the Without_Diatomea_counts data frame to create a Metagenome_counts_with_avg_Diatomea for stacked plot
+Metagenome_counts_with_avg_Diatomea <- rbind(Without_Diatomea_counts ,cbind(data.frame(Taxa= "Diatomea"), Diatomea_stacked_counts %>% summarise_if(is.numeric, mean)))
+```
+
+
+```{r}
+# Sum the Diatomea_stacked_counts df and combing it with the Without_Diatomea_counts data frame to create a Metagenome_counts_with_avg_Diatomea for stacked plot
+Metagenome_counts_with_avg_Diatomea <- rbind(Without_Diatomea_counts ,cbind(data.frame(Taxa= "Diatomea"), Diatomea_stacked_counts %>% summarise_if(is.numeric, sum)))
+```
+
+
+```{r}
+# graphing the Metagenome_counts_with_avg_Diatomea
+
+# Turing the df into a table for ggplot
+Metagenome_Graph_counts_with_avg_Diatomea<-setNames(melt(Metagenome_counts_with_avg_Diatomea), c('Taxa', 'Date', 'Counts'))
+
+
+# Stacked percentage bar graph of taxa of the first 8
+ggplot(Metagenome_Graph_counts_with_avg_Diatomea, aes(fill=Taxa, y=Counts, x=Date)) + 
+  geom_bar(position="fill", stat="identity") +
+  # making outlines
+  geom_bar(position="fill", stat="identity", colour="black") +  
+  # angling the text 
+    theme(axis.text = element_text(angle = -45))+
+     ggtitle("Medium Cosolidation Bar Plot Average Diatomea Taxa")
+
+```
+
+
+
+
+
+```{r}
+# filtering out the Stramenopiles
+Without_Stramenopiles_counts <- Metagenome_average_counts %>% filter(!str_detect(Taxa, "Stramenopiles"))
+```
+
+
+
+
+```{r}
+# averaging the Stramenopiles_stacked_counts df and combing it with the Without_Stramenopiles_counts data frame to create a Metagenome_counts_with_avg_Stramenopile for stacked plot
+Metagenome_counts_with_avg_Stramenopile <- rbind(Without_Stramenopiles_counts ,cbind(data.frame(Taxa= "Stramenopiles"), Stramenopiles_stacked_counts %>% summarise_if(is.numeric, mean)))
+```
+
+
+
+```{r}
+# Sum the Stramenopiles_stacked_counts df and combing it with the Without_Stramenopiles_counts data frame to create a Metagenome_counts_with_avg_Stramenopile for stacked plot
+Metagenome_counts_with_avg_Stramenopile <- rbind(Without_Stramenopiles_counts ,cbind(data.frame(Taxa= "Stramenopiles"), Stramenopiles_stacked_counts %>% summarise_if(is.numeric, sum)))
+```
+
+
+
+
+
+```{r}
+# graphing the Metagenome_counts_with_avg_Stramenopile
+
+# Turing the df into a table for ggplot
+Metagenome_Graph_counts_with_avg_Stramenopile<-setNames(melt(Metagenome_counts_with_avg_Stramenopile), c('Taxa', 'Date', 'Counts'))
+
+
+# Stacked percentage bar graph of taxa of the first 8
+ggplot(Metagenome_Graph_counts_with_avg_Stramenopile, aes(fill=Taxa, y=Counts, x=Date)) + 
+  geom_bar(position="fill", stat="identity") +
+  # making outlines
+  geom_bar(position="fill", stat="identity", colour="black") +  
+  # angling the text 
+    theme(axis.text = element_text(angle = -45))+
+     ggtitle("Medium Cosolidation Bar Plot Average Stramenopile Taxa")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

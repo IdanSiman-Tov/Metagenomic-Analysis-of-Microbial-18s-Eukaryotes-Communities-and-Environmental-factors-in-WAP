@@ -1,0 +1,145 @@
+---
+title: "Donut_Graphs"
+author: "Idan Siman-Tov"
+date: '2022-05-13'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+library(ggpubr)
+library(ggrepel)
+library(webr)
+```
+
+
+
+```{r}
+source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//minimum_consolidation_functions//data_for_pca_formating_updatedSept2022_no_percentage_minimum_consolidation.R")
+source("..//..//Functions//minimum_consolidation_functions//metagenome_taxa_removed_updatedSept2022_no_percentage_minimum_consolidation.R")
+
+source("..//..//Functions//minimum_consolidation_functions//Taxa_DF_updatedSept2022_no_percentage_minimum_consolidation.R")
+```
+
+
+```{r}
+Metagenome <- read.xlsx("..//..//18s_Metagnome//18s_andMetagenome_taxaCounts_updatedSept2022_no_percentage.xlsx", sheetIndex=3, header= FALSE)
+```
+
+
+
+
+```{r}
+Metagenome_percent_counts <-Percentage_Function(metagenome_taxa_removed())
+```
+
+
+```{r}
+Stacked_counts_Seasanol2<-Metagenome_percent_counts[1]
+```
+
+
+
+
+```{r}
+# Creating a new data frame using the sum of percentages of the Minimum Consolidation data
+
+Stacked_counts_Seasanol2["Minimum_Consolidation_Early_Summer_2012"]<-Metagenome_percent_counts$`2012-11-27`
+
+Stacked_counts_Seasanol2["Minimum_Consolidation_Late_Summer_2013"]<-Metagenome_percent_counts$`2013-02-08`
+
+Stacked_counts_Seasanol2["Minimum_Consolidation_Mid_Summer_2013_2014"]<-Metagenome_percent_counts$`2013-12-27` + Metagenome_percent_counts$`2014-01-23`
+
+Stacked_counts_Seasanol2["Minimum_Consolidation_Late_Summer_2014"]<-Metagenome_percent_counts$`2014-02-03` + Metagenome_percent_counts$`2014-02-10` + Metagenome_percent_counts$`2014-02-28` + Metagenome_percent_counts$`2014-03-04`
+
+Stacked_counts_Seasanol2["Minimum_Consolidation_Mid_Summer_2014_2015"]<-Metagenome_percent_counts$`2014-12-01` + Metagenome_percent_counts$`2014-12-11` + Metagenome_percent_counts$`2015-01-12` + Metagenome_percent_counts$`2015-01-19`
+
+Stacked_counts_Seasanol2["Minimum_Consolidation_Late_Summer_2015"]<-Metagenome_percent_counts$`2015-02-09` + Metagenome_percent_counts$`2015-02-23` + Metagenome_percent_counts$`2015-03-09`
+
+Stacked_counts_Seasanol2["Minimum_Consolidation_Trip_1"]<-Metagenome_percent_counts$`2012-11-27` + Metagenome_percent_counts$`2013-02-08`
+
+Stacked_counts_Seasanol2["Minimum_Consolidation_Trip_2"]<-Metagenome_percent_counts$`2013-12-27` + Metagenome_percent_counts$`2014-01-23` + Metagenome_percent_counts$`2014-02-03` + Metagenome_percent_counts$`2014-02-10` + Metagenome_percent_counts$`2014-02-28` + Metagenome_percent_counts$`2014-03-04`
+
+Stacked_counts_Seasanol2["Minimum_Consolidation_Trip_3"]<- Metagenome_percent_counts$`2014-12-01` + Metagenome_percent_counts$`2014-12-11` + Metagenome_percent_counts$`2015-01-12` + Metagenome_percent_counts$`2015-01-19` + Metagenome_percent_counts$`2015-02-09` + Metagenome_percent_counts$`2015-02-23` + Metagenome_percent_counts$`2015-03-09`
+
+Stacked_counts_Seasanol2["Minimum_Consolidation_All"]<- Metagenome_percent_counts$`2012-11-27` + Metagenome_percent_counts$`2013-02-08` + Metagenome_percent_counts$`2013-12-27` + Metagenome_percent_counts$`2014-01-23` + Metagenome_percent_counts$`2014-02-03` + Metagenome_percent_counts$`2014-02-10` + Metagenome_percent_counts$`2014-02-28` + Metagenome_percent_counts$`2014-03-04` + Metagenome_percent_counts$`2014-12-01` + Metagenome_percent_counts$`2014-12-11` + Metagenome_percent_counts$`2015-01-12` + Metagenome_percent_counts$`2015-01-19` + Metagenome_percent_counts$`2015-02-09` + Metagenome_percent_counts$`2015-02-23` + Metagenome_percent_counts$`2015-03-09`
+
+
+```
+
+
+
+
+
+```{r}
+# Using a pipe function to manipulate data and adding a super taxa category
+Stacked_counts_Seasanol <- Stacked_counts_Seasanol2%>%
+  # using a mutate function to add a summer stage based off of month data was collected
+  mutate(
+    Broad_Category = if_else(str_detect(Taxa, "Diatomea"), "Diatomea", if_else(str_detect(Taxa, "Stramenopiles") , "Stramenopiles", "Other")),
+  )
+
+```
+
+
+
+```{r}
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Minimum_Consolidation_Early_Summer_2012),
+         ratioByGroup = FALSE, showPieName = FALSE, donutLabelSize=5, pieLabelSize=5, title="Minimum_Consolidation_Early_Summer_2012",color = "darkslategray")
+
+
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Minimum_Consolidation_Late_Summer_2013),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Minimum_Consolidation_Late_Summer_2013",color = "darkslategray")
+
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Minimum_Consolidation_Mid_Summer_2013_2014),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Minimum_Consolidation_Mid_Summer_2013_2014",color = "darkslategray")
+
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Minimum_Consolidation_Late_Summer_2014),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Minimum_Consolidation_Late_Summer_2014",color = "darkslategray")
+
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Minimum_Consolidation_Mid_Summer_2014_2015),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Minimum_Consolidation_Mid_Summer_2014_2015",color = "darkslategray")
+
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Minimum_Consolidation_Late_Summer_2015),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Minimum_Consolidation_Late_Summer_2015",color = "darkslategray")
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Minimum_Consolidation_Trip_1),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Minimum_Consolidation_Trip_1",color = "darkslategray")
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Minimum_Consolidation_Trip_2),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Minimum_Consolidation_Trip_2",color = "darkslategray")
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Minimum_Consolidation_Trip_3),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Minimum_Consolidation_Trip_3",color = "darkslategray")
+
+PieDonut(Stacked_counts_Seasanol, aes(Broad_Category, Taxa, count= Minimum_Consolidation_All),
+         ratioByGroup = FALSE, showPieName = FALSE,  donutLabelSize=5, pieLabelSize=5,title="Minimum_Consolidation_All",color = "darkslategray")
+
+# ,maxx=3 is to zoom out
+```
+
+
+
+
+
+
+
+

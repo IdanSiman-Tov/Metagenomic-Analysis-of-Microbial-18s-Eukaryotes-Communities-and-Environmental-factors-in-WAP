@@ -1,0 +1,375 @@
+---
+title: "18S_Correlation"
+author: "Idan Siman-Tov"
+date: '2022-03-26'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(xlsx)
+library(ggplot2)
+library(ggfortify)
+library(tidyverse)
+library(dplyr)
+library(GGally)
+library(corrgram)
+library(janitor)
+library(reshape2)
+library(vegan)
+
+
+source("..//..//Functions//My_Functions.R")
+source("..//..//Functions//minimum_consolidation_functions//data_for_pca_formating_updatedSept2022_no_percentage_minimum_consolidation.R")
+source("..//..//Functions//minimum_consolidation_functions//metagenome_taxa_removed_updatedSept2022_no_percentage_minimum_consolidation.R")
+
+source("..//..//Functions//minimum_consolidation_functions//Taxa_DF_updatedSept2022_no_percentage_minimum_consolidation.R")
+
+```
+
+
+```{r}
+data_for_pca<-data_for_pca()
+```
+
+```{r}
+CTD_crop<-CTD_crop()
+```
+
+```{r}
+Metagenome_average_counts <-metagenome_taxa_removed()
+```
+
+
+
+
+ 
+```{r}
+# Removing the metagenome data base in favor for 18s so that cbind can combine the two so that I can do correlations
+
+# Metagenome_average_counts <- subset (Metagenome_average_counts, select = -c(2,7))
+
+```
+
+```{r}
+# Pretty sure I dont need this
+
+# saving the Metagenome_average_counts
+# write.csv(Metagenome_average_counts, "Metagenome_average_counts_updatedSept2022_no_percentage_minimum_consolidation.csv")
+```
+
+
+
+
+
+```{r}
+# Pretty sure I dont need this
+
+# # Using an external xlsx file i made of percentages of taxa instead of counts
+# Metagenome_percent_counts <- read.xlsx("Metagenome_percent_counts.xlsx", sheetIndex=1, header= TRUE)
+# 
+# Metagenome_average_counts_intermidiary<- Metagenome_average_counts
+# 
+# Metagenome_average_counts_intermidiary[1:27,2:20]<-Metagenome_percent_counts[1:27,3:20]
+# 
+# Metagenome_percent_counts<-Metagenome_average_counts_intermidiary
+```
+
+
+
+
+
+
+```{r}
+# WILL NEED TO EDIT
+
+# Alveolata.Dinoflagellata<-Alveolata.Dinoflagellata()
+# Alveolata.otherAlveolata<- Alveolata.otherAlveolata()
+# Archaeplastida.Chlorophyta<- Archaeplastida.Chlorophyta()
+# Archaeplastida.otherArchaeplastida<- Archaeplastida.otherArchaeplastida()
+# Cryptophyceae.Cryptomonadales.Geminigera<- Cryptophyceae.Cryptomonadales.Geminigera()
+# Cryptophyceae.otherCryptophyceae<- Cryptophyceae.otherCryptophyceae()
+# Excavata.Discoba.Jakobida<- Excavata.Discoba.Jakobida()
+# Haptophyta.Phaeocystis<- Haptophyta.Phaeocystis()
+# Picozoa.otherPicozoa<- Picozoa.otherPicozoa()
+# Rhizaria.Cercozoa<- Rhizaria.Cercozoa()
+# Rhizaria.otherRhizaria<- Rhizaria.otherRhizaria()
+# SAR_unclassified<- SAR_unclassified()
+# Stramenopiles.Diatomea.Bacillariophytina<- Stramenopiles.Diatomea.Bacillariophytina()
+# Stramenopiles.Diatomea.Coscinodiscophytina<- Stramenopiles.Diatomea.Coscinodiscophytina()
+# Stramenopiles.Diatomea.otherDiatomea<- Stramenopiles.Diatomea.otherDiatomea()
+# Stramenopiles.Dictyochophyceae.Dictyochales<- Stramenopiles.Dictyochophyceae.Dictyochales()
+# Stramenopiles.Dictyochophyceae.Florenciellales<- Stramenopiles.Dictyochophyceae.Florenciellales()
+# Stramenopiles.Dictyochophyceae.otherDictyochophyceae<- Stramenopiles.Dictyochophyceae.otherDictyochophyceae()
+# Stramenopiles.Dictyochophyceae.Pedinellales<- Stramenopiles.Dictyochophyceae.Pedinellales()
+# Stramenopiles.Ochrophyta.other<- Stramenopiles.Ochrophyta.other()
+# Stramenopiles.otherStramenopiles<- Stramenopiles.otherStramenopiles()
+# Stramenopiles.Phaeophyceae<- Stramenopiles.Phaeophyceae()
+# Stramenopiles.Diatomea.ME_Euk_FW10<- Stramenopiles.Diatomea.ME_Euk_FW10()
+# Stramenopiles.MAST_2<- Stramenopiles.MAST_2()
+# Stramenopiles.MAST_3<- Stramenopiles.MAST_3()
+# Picozoa.Picomonadida<-Picozoa.Picomonadida()
+
+```
+
+
+
+```{r}
+
+Alveolata.Dinoflagellata<-Alveolata.Dinoflagellata()
+Alveolata.otherAlveolata<- Alveolata.otherAlveolata()
+Archaeplastida.Chlorophyta.and.otherArchaeplastida<- Archaeplastida.Chlorophyta.and.otherArchaeplastida()
+Cryptophyceae.Cryptomonadales.Geminigera<- Cryptophyceae.Cryptomonadales.Geminigera()
+Cryptophyceae.otherCryptophyceae<- Cryptophyceae.otherCryptophyceae()
+Excavata.Discoba.Jakobida<- Excavata.Discoba.Jakobida()
+Haptophyta.non_Phaeocystis<-Haptophyta.non_Phaeocystis()
+Haptophyta.Phaeocystis<-Haptophyta.Phaeocystis()
+Picozoa.Picomonadida<-Picozoa.Picomonadida()
+Rhizaria.Cercozoa<- Rhizaria.Cercozoa()
+Stramenopiles.Diatomea.Bacillariophytina<- Stramenopiles.Diatomea.Bacillariophytina()
+Stramenopiles.Diatomea.Coscinodiscophytina<- Stramenopiles.Diatomea.Coscinodiscophytina()
+Stramenopiles.Diatomea.ME_Euk_FW10<-Stramenopiles.Diatomea.ME_Euk_FW10()
+Stramenopiles.Diatomea.otherDiatomea<-Stramenopiles.Diatomea.otherDiatomea()
+Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae<-Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae()
+Stramenopiles.Dictyochophyceae.Pedinellales<-Stramenopiles.Dictyochophyceae.Pedinellales()
+Stramenopiles.MAST_2.and.MAST_3<-Stramenopiles.MAST_2.and.MAST_3()
+Stramenopiles.Ochrophyta.other<-Stramenopiles.Ochrophyta.other()
+Stramenopiles.otherStramenopiles<-Stramenopiles.otherStramenopiles()
+Stramenopiles.Phaeophyceae<-Stramenopiles.Phaeophyceae()
+SAR_unclassified<-SAR_unclassified()
+Eukaryota_other<-Eukaryota_other()
+```
+
+
+
+```{r}
+# I'm pretty sure this was to remove metagenome database and I dont need that any more because its already removed
+
+# WILL NEED TO EDIT
+# Alveolata.Dinoflagellata<-data.frame(Alveolata.Dinoflagellata=Alveolata.Dinoflagellata[-c(2,7),])
+# Alveolata.otherAlveolata<-data.frame(Alveolata.otherAlveolata=Alveolata.otherAlveolata[-c(2,7),])
+# Archaeplastida.Chlorophyta<-data.frame(Archaeplastida.Chlorophyta=Archaeplastida.Chlorophyta[-c(2,7),])
+# Archaeplastida.otherArchaeplastida<-data.frame(Archaeplastida.otherArchaeplastida=Archaeplastida.otherArchaeplastida[-c(2,7),])
+# Cryptophyceae.Cryptomonadales.Geminigera<-data.frame(Cryptophyceae.Cryptomonadales.Geminigera=Cryptophyceae.Cryptomonadales.Geminigera[-c(2,7),])
+# Cryptophyceae.otherCryptophyceae<-data.frame(Cryptophyceae.otherCryptophyceae=Cryptophyceae.otherCryptophyceae[-c(2,7),])
+# Excavata.Discoba.Jakobida<-data.frame(Excavata.Discoba.Jakobida=Excavata.Discoba.Jakobida[-c(2,7),])
+# Haptophyta.Phaeocystis<-data.frame(Haptophyta.Phaeocystis=Haptophyta.Phaeocystis[-c(2,7),])
+# Picozoa.otherPicozoa<-data.frame(Picozoa.otherPicozoa=Picozoa.otherPicozoa[-c(2,7),])
+# Rhizaria.Cercozoa<-data.frame(Rhizaria.Cercozoa=Rhizaria.Cercozoa[-c(2,7),])
+# Rhizaria.otherRhizaria<-data.frame(Rhizaria.otherRhizaria=Rhizaria.otherRhizaria[-c(2,7),])
+# SAR_unclassified<-data.frame(SAR_unclassified=SAR_unclassified[-c(2,7),])
+# Stramenopiles.Diatomea.Bacillariophytina<-data.frame(Stramenopiles.Diatomea.Bacillariophytina=Stramenopiles.Diatomea.Bacillariophytina[-c(2,7),])
+# Stramenopiles.Diatomea.Coscinodiscophytina<-data.frame(Stramenopiles.Diatomea.Coscinodiscophytina=Stramenopiles.Diatomea.Coscinodiscophytina[-c(2,7),])
+# Stramenopiles.Diatomea.otherDiatomea<-data.frame(Stramenopiles.Diatomea.otherDiatomea=Stramenopiles.Diatomea.otherDiatomea[-c(2,7),])
+# Stramenopiles.Dictyochophyceae.Dictyochales<-data.frame(Stramenopiles.Dictyochophyceae.Dictyochales=Stramenopiles.Dictyochophyceae.Dictyochales[-c(2,7),])
+# Stramenopiles.Dictyochophyceae.Florenciellales<-data.frame(Stramenopiles.Dictyochophyceae.Florenciellales=Stramenopiles.Dictyochophyceae.Florenciellales[-c(2,7),])
+# Stramenopiles.Dictyochophyceae.otherDictyochophyceae<-data.frame(Stramenopiles.Dictyochophyceae.otherDictyochophyceae=Stramenopiles.Dictyochophyceae.otherDictyochophyceae[-c(2,7),])
+# Stramenopiles.Dictyochophyceae.Pedinellales<-data.frame(Stramenopiles.Dictyochophyceae.Pedinellales=Stramenopiles.Dictyochophyceae.Pedinellales[-c(2,7),])
+# Stramenopiles.Ochrophyta.other<-data.frame(Stramenopiles.Ochrophyta.other=Stramenopiles.Ochrophyta.other[-c(2,7),])
+# Stramenopiles.otherStramenopiles<-data.frame(Stramenopiles.otherStramenopiles=Stramenopiles.otherStramenopiles[-c(2,7),])
+# Stramenopiles.Phaeophyceae<-data.frame(Stramenopiles.Phaeophyceae=Stramenopiles.Phaeophyceae[-c(2,7),])
+# Stramenopiles.Diatomea.ME_Euk_FW10<-data.frame(Stramenopiles.Diatomea.ME_Euk_FW10=Stramenopiles.Diatomea.ME_Euk_FW10[-c(2,7),])
+# Stramenopiles.MAST_2<-data.frame(Stramenopiles.MAST_2=Stramenopiles.MAST_2[-c(2,7),])
+# Stramenopiles.MAST_3<-data.frame(Stramenopiles.MAST_3=Stramenopiles.MAST_3[-c(2,7),])
+# Picozoa.Picomonadida<-data.frame(Picozoa.Picomonadida=Picozoa.Picomonadida[-c(2,7),])
+# 
+
+
+```
+
+
+
+
+
+
+```{r}
+# WILL NEED TO EDIT
+Big_PCA <- do.call("cbind", list(data_for_pca, 
+  Alveolata.Dinoflagellata,
+  Alveolata.otherAlveolata,
+  Archaeplastida.Chlorophyta.and.otherArchaeplastida,
+  Cryptophyceae.Cryptomonadales.Geminigera,
+  Cryptophyceae.otherCryptophyceae,
+  Excavata.Discoba.Jakobida,
+  Haptophyta.non_Phaeocystis,
+  Haptophyta.Phaeocystis,
+  Picozoa.Picomonadida,
+  Rhizaria.Cercozoa,
+  Stramenopiles.Diatomea.Bacillariophytina,
+  Stramenopiles.Diatomea.Coscinodiscophytina,
+  Stramenopiles.Diatomea.ME_Euk_FW10,
+  Stramenopiles.Diatomea.otherDiatomea,
+  Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae,
+  Stramenopiles.Dictyochophyceae.Pedinellales,
+  Stramenopiles.MAST_2.and.MAST_3,
+  Stramenopiles.Ochrophyta.other,
+  Stramenopiles.otherStramenopiles,
+  Stramenopiles.Phaeophyceae,
+  SAR_unclassified,
+  Eukaryota_other
+))
+```
+
+
+
+```{r}
+# corrgram(Archaeplastida.Chlorophyta_PCA, order=TRUE, lower.panel=panel.shade, upper.panel=panel.cor, text.panel=panel.txt)
+```
+
+
+
+
+```{r}
+ggcorr(Big_PCA)+
+   ggtitle("Minimum Cosolidation Correlation Plot")
+
+```
+
+
+```{r}
+Big_PCA_res <- prcomp(Big_PCA, scale. = TRUE)
+
+
+
+autoplot(Big_PCA_res, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=4)+
+   ggtitle("Minimum Cosolidation PCA Plot")
+```
+
+
+```{r}
+# Making Big_PCA into a matrix
+Big_PCA_corl <- round(cor(Big_PCA),2)
+```
+
+```{r}
+# Filtering out Big_PCA to only include greater then or lesser then values
+Big_PCA_corl_filterd <- Big_PCA_corl
+
+x<- 0.65
+
+Big_PCA_corl_filterd[Big_PCA_corl_filterd < x & Big_PCA_corl_filterd > -x] <- ""
+```
+
+
+```{r}
+# Saving Big_PCA-Corl_filter as an excel file
+# write.csv(Big_PCA_corl_filterd, "..//..//Generated_Tables//Big_PCA_corl_filterd_updatedSept2022_no_percentage_minimum_consolidation.csv")
+```
+
+
+
+
+
+
+
+```{r}
+
+Temperature...C. <-data_for_pca[1]
+Conductivity..S.m.<-data_for_pca[2]
+Pressure..dbar.<-data_for_pca[3]
+Fluorescence..mg.m.<-data_for_pca[4]
+Salinity<-data_for_pca[5]
+Depth..m.<-data_for_pca[6]
+Density..kg.m.<-data_for_pca[7]
+Chlorophyll..mg.m.<-data_for_pca[8]
+Phaeopigment..mg.m.<-data_for_pca[9]
+Phosphate..µmol.L.<-data_for_pca[10]
+Silicate..µmol.L.<-data_for_pca[11]
+Nitrite.and.Nitrate..µmol.L.<-data_for_pca[12]
+Primary.Prod...mg.m.day.<-data_for_pca[13]
+Prim.Prod.STD..mg.m.day.<-data_for_pca[14]
+
+```
+
+
+
+
+
+
+```{r}
+# I WILL NEED TO REMAKE THIS WITH THE COROLATIONS I END UP CHOOSING
+
+
+# WILL CHANGE
+Large_corl <- do.call("cbind", list(Temperature...C.,Conductivity..S.m., Salinity,"Density..kg.m³.", "Primary.Prod...mg.m³.day.", Cryptophyceae.Cryptomonadales.Geminigera))
+```
+
+
+
+
+
+
+```{r}
+Group_1 <- do.call("cbind", list(data_for_pca, Archaeplastida.Chlorophyta.and.otherArchaeplastida, Rhizaria.Cercozoa, Stramenopiles.Diatomea.ME_Euk_FW10, Stramenopiles.Dictyochophyceae.Pedinellales))
+```
+
+```{r}
+
+Group_1_PCA <- prcomp(Group_1, scale. = TRUE)
+
+autoplot(Group_1_PCA, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=6)+
+  ggtitle("Minimum Group 1 PCA Plot")
+
+```
+
+
+
+
+
+```{r}
+Group_2 <- do.call("cbind", list(data_for_pca, Excavata.Discoba.Jakobida, Haptophyta.non_Phaeocystis, Eukaryota_other))
+```
+
+
+```{r}
+Group_2_PCA <- prcomp(Group_2, scale. = TRUE)
+
+autoplot(Group_2_PCA, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=6)+
+  ggtitle("Minimum Group 2 PCA Plot")
+
+```
+
+
+
+
+```{r}
+Group_3 <- do.call("cbind", list(data_for_pca, Cryptophyceae.Cryptomonadales.Geminigera, Picozoa.Picomonadida, Stramenopiles.otherStramenopiles))
+```
+
+
+```{r}
+Group_3_PCA <- prcomp(Group_3, scale. = TRUE)
+
+autoplot(Group_3_PCA, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=6)+
+  ggtitle("Minimum Group 3 PCA Plot")
+
+```
+
+
+
+
+```{r}
+Group_4 <- do.call("cbind", list(data_for_pca, Cryptophyceae.otherCryptophyceae, Stramenopiles.Dictyochophyceae.Dictyochales.and.Florenciellales.and.otherDictyochophyceae, Stramenopiles.MAST_2.and.MAST_3))
+```
+
+
+```{r}
+Group_4_PCA <- prcomp(Group_4, scale. = TRUE)
+
+autoplot(Group_4_PCA, data = CTD_crop, colour = 'Date', shape = "Summer_Stage", loadings=TRUE, loadings.label=TRUE, loadings.label.size=6)+
+  ggtitle("Minimum Group 4 PCA Plot")
+
+```
+
+
+
+
+
+
+
+
+
+
